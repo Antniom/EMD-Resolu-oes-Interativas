@@ -1,7 +1,34 @@
 // FEM Solver for EAC (Estruturas de Alma Cheia)
 // Handles Molas (Springs), Barras 2D (Trusses), Vigas (Beams), and Viga-Barras (Frames)
 
-import { Expr, Matrix, solveEigenvalues, matrixSubtractScaled, buildModeShapeVector, exprFormatNumber } from '../../core/math.js';
+import { Expr, Matrix, solveEigenvalues, matrixSubtractScaled, buildModeShapeVector, exprFormatNumber, floatToFractionLaTeX } from '../../core/math.js';
+
+function getTrigLaTeX(i, j, th1, th2) {
+  const angle1 = `${Math.round(th1)}^\\circ`;
+  const angle2 = `${Math.round(th2)}^\\circ`;
+  
+  if (i === 0 && j === 0) return `\\cos^2(${angle1})`;
+  if (i === 0 && j === 1) return `\\cos(${angle1})\\sin(${angle1})`;
+  if (i === 0 && j === 2) return `-\\cos(${angle1})\\cos(${angle2})`;
+  if (i === 0 && j === 3) return `-\\cos(${angle1})\\sin(${angle2})`;
+  
+  if (i === 1 && j === 0) return `\\sin(${angle1})\\cos(${angle1})`;
+  if (i === 1 && j === 1) return `\\sin^2(${angle1})`;
+  if (i === 1 && j === 2) return `-\\sin(${angle1})\\cos(${angle2})`;
+  if (i === 1 && j === 3) return `-\\sin(${angle1})\\sin(${angle2})`;
+  
+  if (i === 2 && j === 0) return `-\\cos(${angle2})\\cos(${angle1})`;
+  if (i === 2 && j === 1) return `-\\cos(${angle2})\\sin(${angle1})`;
+  if (i === 2 && j === 2) return `\\cos^2(${angle2})`;
+  if (i === 2 && j === 3) return `\\cos(${angle2})\\sin(${angle2})`;
+  
+  if (i === 3 && j === 0) return `-\\sin(${angle2})\\cos(${angle1})`;
+  if (i === 3 && j === 1) return `-\\sin(${angle2})\\sin(${angle1})`;
+  if (i === 3 && j === 2) return `\\sin(${angle2})\\cos(${angle2})`;
+  if (i === 3 && j === 3) return `\\sin^2(${angle2})`;
+  
+  return "";
+}
 
 // Helper: parse custom expression load
 function parseExpressionLoad(exprStr) {
@@ -118,7 +145,7 @@ function solveMolas(state) {
             const key = `${ga},${gb}`;
             steps[key] = steps[key] || { symbols: [], values: [] };
             const sym = (a === b) ? `k_s${e+1}` : `-k_s${e+1}`;
-            const val = (a === b) ? `${exprFormatNumber(k_val)}*k` : `-${exprFormatNumber(k_val)}*k`;
+            const val = (a === b) ? `${floatToFractionLaTeX(k_val)} \\cdot k` : `-${floatToFractionLaTeX(k_val)} \\cdot k`;
             steps[key].symbols.push(sym);
             steps[key].values.push(val);
           }
@@ -339,7 +366,16 @@ function solveBarra2D(state) {
             const key = `${gi},${gj}`;
             steps[key] = steps[key] || { symbols: [], values: [] };
             const sym = `k${i+1}${j+1}_b${e+1}`;
-            const valStr = `${exprFormatNumber(E*A)}*EA / ${exprFormatNumber(L)}L * trig`;
+            const trigLaTeX = getTrigLaTeX(i, j, th1, th2);
+            const trigVal = v[i] * v[j];
+            const trigValStr = floatToFractionLaTeX(trigVal);
+            
+            let valStr = "";
+            if (Math.abs(E*A - 1) < 1e-9) {
+              valStr = `\\frac{EA}{${exprFormatNumber(L)}L} \\cdot \\left(${trigLaTeX} = ${trigValStr}\\right)`;
+            } else {
+              valStr = `${floatToFractionLaTeX(E*A)} \\cdot \\frac{EA}{${exprFormatNumber(L)}L} \\cdot \\left(${trigLaTeX} = ${trigValStr}\\right)`;
+            }
             steps[key].symbols.push(sym);
             steps[key].values.push(valStr);
           }
@@ -836,7 +872,13 @@ function solveViga(state) {
               const key = `${gi},${gj}`;
               steps[key] = steps[key] || { symbols: [], values: [] };
               steps[key].symbols.push(`k${i+1}${j+1}_v${e+1}`);
-              steps[key].values.push(`${exprFormatNumber(coeff)}*${baseStr}`);
+              
+              let baseLaTeX = baseStr;
+              if (baseStr === "EI/L^3") baseLaTeX = "\\frac{EI}{L^3}";
+              else if (baseStr === "EI/L^2") baseLaTeX = "\\frac{EI}{L^2}";
+              else if (baseStr === "EI/L") baseLaTeX = "\\frac{EI}{L}";
+               
+              steps[key].values.push(`${floatToFractionLaTeX(coeff)} \\cdot ${baseLaTeX}`);
             }
           }
         }
@@ -1300,7 +1342,7 @@ function solveVigaBarra2D(state) {
             const key = `${gi},${gj}`;
             steps[key] = steps[key] || { symbols: [], values: [] };
             steps[key].symbols.push(`k${i+1}${j+1}_f${e+1}`);
-            steps[key].values.push(`${exprFormatNumber(val)}*EI/L^3`);
+            steps[key].values.push(`${floatToFractionLaTeX(val)} \\cdot \\frac{EI}{L^3}`);
           }
         }
       }
@@ -1581,7 +1623,7 @@ function buildStiffnessAssemblyStepLines(K, steps, nDof) {
         left = left.replace(/\+ -/g, "- ");
         let middle = "= " + steps[key].values.join(" + ");
         middle = middle.replace(/\+ -/g, "- ");
-        let right = `= ${K.get(i-1, j-1).toString()}`;
+        let right = `= ${K.get(i-1, j-1).toLaTeX()}`;
         lines.push(`$$${left}$$`);
         lines.push(`$$${middle}$$`);
         if (steps[key].symbols.length > 1 || middle !== right) {

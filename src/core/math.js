@@ -138,12 +138,13 @@ export class Expr {
         formattedKey = formattedKey.replace(/\^(\d+)/g, "^{$1}");
       }
       
-      let termStr = Math.abs(absCoef - 1) < 1e-9 ? formattedKey : `${exprFormatNumber(absCoef)}${formattedKey}`;
+      let coefStr = floatToFractionLaTeX(absCoef);
+      let termStr = coefStr === "1" ? formattedKey : `${coefStr}${formattedKey}`;
       parts.push({ sign, text: termStr });
     }
     if (Math.abs(this.const) > 1e-9) {
       let sign = this.const < 0 ? "-" : "+";
-      parts.push({ sign, text: exprFormatNumber(Math.abs(this.const)) });
+      parts.push({ sign, text: floatToFractionLaTeX(Math.abs(this.const)) });
     }
     if (parts.length === 0) return "0";
     let out = "";
@@ -157,6 +158,41 @@ export class Expr {
     }
     return out;
   }
+}
+
+export function floatToFractionLaTeX(val) {
+  const absVal = Math.abs(val);
+  if (absVal < 1e-7) return "0";
+  
+  // Check common algebraic/trigonometric constants
+  if (Math.abs(absVal - 0.5) < 1e-4) return (val < 0 ? "-" : "") + "\\frac{1}{2}";
+  if (Math.abs(absVal - 0.25) < 1e-4) return (val < 0 ? "-" : "") + "\\frac{1}{4}";
+  if (Math.abs(absVal - 0.75) < 1e-4) return (val < 0 ? "-" : "") + "\\frac{3}{4}";
+  if (Math.abs(absVal - 0.70710678) < 1e-4) return (val < 0 ? "-" : "") + "\\frac{\\sqrt{2}}{2}";
+  if (Math.abs(absVal - 0.8660254) < 1e-4) return (val < 0 ? "-" : "") + "\\frac{\\sqrt{3}}{2}";
+  if (Math.abs(absVal - 0.4330127) < 1e-4) return (val < 0 ? "-" : "") + "\\frac{\\sqrt{3}}{4}";
+  if (Math.abs(absVal - 0.3535534) < 1e-4) return (val < 0 ? "-" : "") + "\\frac{\\sqrt{2}}{4}";
+  if (Math.abs(absVal - 0.17677669) < 1e-4) return (val < 0 ? "-" : "") + "\\frac{\\sqrt{2}}{8}";
+  if (Math.abs(absVal - 1.7677669) < 1e-4) return (val < 0 ? "-" : "") + "\\frac{5\\sqrt{2}}{4}";
+  
+  // Continued fractions for rational numbers
+  let tolerance = 1e-4;
+  let h1 = 1, h2 = 0, k1 = 0, k2 = 1;
+  let b = absVal;
+  do {
+    let a = Math.floor(b);
+    let aux = h1; h1 = a * h1 + h2; h2 = aux;
+    aux = k1; k1 = a * k1 + k2; k2 = aux;
+    if (Math.abs(b - a) < 1e-9) break;
+    b = 1 / (b - a);
+  } while (Math.abs(absVal - h1 / k1) > tolerance && k1 <= 50);
+  
+  if (k1 <= 50 && Math.abs(absVal - h1 / k1) < tolerance) {
+    if (k1 === 1) return (val < 0 ? "-" : "") + h1.toString();
+    return (val < 0 ? "-" : "") + `\\frac{${h1}}{${k1}}`;
+  }
+  
+  return val.toFixed(4).replace(/\.?0+$/, "");
 }
 
 export function exprFormatNumber(x) {
