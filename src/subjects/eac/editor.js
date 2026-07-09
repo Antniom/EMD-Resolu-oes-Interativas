@@ -26,9 +26,9 @@ export class EacEditor {
     this.selectedSupportSpringK = 1;
 
     // Grid settings
-    this.gridSize = 40;  // 1 meter = 40 pixels
+    this.gridSize = 120;  // 1 meter = 120 pixels
     this.snapToGrid = true;
-    this.origin = { x: 100, y: 300 }; // offset coordinate origin
+    this.origin = { x: 250, y: 350 }; // offset coordinate origin
 
     // Animation state for vibration modes
     this.animationModeIdx = null; // null for no animation, 0, 1, 2 for modes
@@ -71,6 +71,12 @@ export class EacEditor {
     const rect = this.canvas.parentElement.getBoundingClientRect();
     this.canvas.width = rect.width || 600;
     this.canvas.height = rect.height || 400;
+    
+    // Position the origin so that the model fits nicely in the center area
+    this.origin = {
+      x: Math.round(this.canvas.width / 2.6), 
+      y: Math.round(this.canvas.height / 1.5)
+    };
     this.draw();
   }
 

@@ -64,6 +64,37 @@ export class EacModule extends SubjectTemplate {
     subTypeSelect.value = this.subType;
     leftSection.appendChild(subTypeSelect);
 
+    // Sebenta Exercises Select
+    const exSelect = document.createElement('select');
+    exSelect.id = 'sebenta-selector';
+    exSelect.className = 'select-input text-sm py-1.5 px-3 rounded-lg bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]';
+    exSelect.innerHTML = `
+      <option value="">-- Escolher Exercício Sebenta --</option>
+      <option value="ex1">Exercício 1 (Treliça AD-BD-CD)</option>
+      <option value="ex2">Exercício 2 (Treliça Tripé)</option>
+      <option value="ex3">Exercício 3 (Treliça Teto C)</option>
+      <option value="ex4">Exercício 4 (Treliça Apoio Inclinado 30º)</option>
+      <option value="ex5">Exercício 5 (Treliça Apoio Inclinado -20º)</option>
+      <option value="ex6">Exercício 6 (Treliça Apoios Deslizantes)</option>
+      <option value="ex7">Exercício 7 (Viga Carga Linear)</option>
+      <option value="ex8">Exercício 8 (Viga Simétrica 2L)</option>
+      <option value="ex9">Exercício 9 (Viga Carga Triangular)</option>
+      <option value="ex10">Exercício 10 (Pórtico Concentrada + Uniforme)</option>
+      <option value="ex11">Exercício 11 (Pórtico Perpendicular + Triangular)</option>
+      <option value="ex12">Exercício 12 (Pórtico Carga Polinomial)</option>
+      <option value="ex13">Exercício 13 (Viga Bi-Engastada 2 El.)</option>
+      <option value="ex14">Exercício 14 (Sistema de Molas 1D)</option>
+      <option value="ex15">Exercício 15 (Pórtico Cargas Complexas)</option>
+    `;
+    exSelect.onchange = (e) => {
+      const exId = e.target.value;
+      if (exId) {
+        this.loadSebentaExercise(exId);
+        subTypeSelect.value = this.subType;
+      }
+    };
+    leftSection.appendChild(exSelect);
+
     const divider = document.createElement('div');
     divider.className = 'hidden md:block w-[1px] h-6 bg-[var(--panel-border)]';
     leftSection.appendChild(divider);
@@ -277,6 +308,11 @@ export class EacModule extends SubjectTemplate {
     // Render initial workspace and resolve
     this.renderWorkspace();
     this.solve();
+
+    // Defer canvas resizing to ensure parent bounding client dimensions are fully layouted
+    setTimeout(() => {
+      if (this.editor) this.editor.resizeCanvas();
+    }, 50);
   }
 
   renderWorkspace() {
@@ -683,8 +719,8 @@ export class EacModule extends SubjectTemplate {
         // Auto compute element angles
         const ang = Math.round(Math.atan2(dy, dx) * 180 / Math.PI);
         el.theta = ang;
-        el.th1 = n1.angle || 0;
-        el.th2 = n2.angle || 0;
+        el.th1 = ang - (n1.angle || 0);
+        el.th2 = ang - (n2.angle || 0);
       } else if (this.subType === 'viga') {
         el.dofs = [n1.dofIndices[1], n1.dofIndices[2], n2.dofIndices[1], n2.dofIndices[2]];
       } else if (this.subType === 'vigabarra2d') {
@@ -761,7 +797,23 @@ export class EacModule extends SubjectTemplate {
     const kOutput = document.createElement('div');
     kOutput.className = 'space-y-1 font-mono text-[11px] text-[var(--text-primary)]';
     this.solvedResult.steps.slice(0, 15).forEach(line => {
-      kOutput.innerHTML += `<div>${line}</div>`;
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'my-1 overflow-x-auto';
+      if (line.startsWith('$$') && line.endsWith('$$')) {
+        const math = line.slice(2, -2).trim();
+        if (window.katex) {
+          try {
+            lineDiv.innerHTML = window.katex.renderToString(math, { displayMode: false, throwOnError: false });
+          } catch(e) {
+            lineDiv.innerText = line;
+          }
+        } else {
+          lineDiv.innerText = line;
+        }
+      } else {
+        renderLaTeXText(line, lineDiv);
+      }
+      kOutput.appendChild(lineDiv);
     });
     if (this.solvedResult.steps.length > 15) {
       kOutput.innerHTML += `<div class="text-[var(--text-tertiary)] italic mt-1">+ ${this.solvedResult.steps.length - 15} termos de rigidez assemblados...</div>`;
@@ -864,6 +916,230 @@ export class EacModule extends SubjectTemplate {
     // Sync subType select element in UI
     const subTypeSelect = this.container.querySelector('#subtype-selector');
     if (subTypeSelect) subTypeSelect.value = this.subType;
+
+    this.renderWorkspace();
+    this.solve();
+  }
+
+  loadSebentaExercise(exId) {
+    if (!exId) return;
+
+    if (exId === 'ex1') {
+      this.subType = 'barra2d';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'pinned', angle: 0 },
+        { id: 2, x: 2, y: 0, support: 'pinned', angle: 0 },
+        { id: 3, x: 2, y: 2, support: 'pinned', angle: 0 },
+        { id: 4, x: 0, y: 2, support: 'none', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'bar', n1: 1, n2: 4, E: 1, A: 1, L: 2, p0: 0, pL: 0, py: '' },
+        { id: 2, type: 'bar', n1: 2, n2: 4, E: 2, A: 1, L: 2.828, p0: 0, pL: 0, py: '' },
+        { id: 3, type: 'bar', n1: 3, n2: 4, E: 3, A: 1, L: 2, p0: 0, pL: 0, py: '' }
+      ];
+      this.forces = [
+        { node: 4, px: 2, py: -1, m: 0 }
+      ];
+    } else if (exId === 'ex2') {
+      this.subType = 'barra2d';
+      this.nodes = [
+        { id: 1, x: -1, y: 0, support: 'pinned', angle: 0 },
+        { id: 2, x: 0, y: 0, support: 'pinned', angle: 0 },
+        { id: 3, x: 1, y: 0, support: 'pinned', angle: 0 },
+        { id: 4, x: 0, y: 2, support: 'none', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'bar', n1: 1, n2: 4, E: 1, A: 1, L: 2.236, p0: 0, pL: 0, py: '' },
+        { id: 2, type: 'bar', n1: 2, n2: 4, E: 1, A: 1, L: 2, p0: 0, pL: 0, py: '' },
+        { id: 3, type: 'bar', n1: 3, n2: 4, E: 1, A: 1, L: 2.236, p0: 0, pL: 0, py: '' }
+      ];
+      this.forces = [
+        { node: 4, px: -1, py: -1, m: 0 }
+      ];
+    } else if (exId === 'ex3') {
+      this.subType = 'barra2d';
+      this.nodes = [
+        { id: 1, x: -1, y: 2, support: 'pinned', angle: 0 },
+        { id: 2, x: 1, y: 2, support: 'pinned', angle: 0 },
+        { id: 3, x: 0, y: -2, support: 'pinned', angle: 0 },
+        { id: 4, x: 0, y: 0, support: 'none', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'bar', n1: 4, n2: 3, E: 1, A: 1, L: 2, p0: 0, pL: 0, py: '' },
+        { id: 2, type: 'bar', n1: 4, n2: 1, E: 1, A: 1, L: 2.236, p0: 0, pL: 0, py: '' },
+        { id: 3, type: 'bar', n1: 4, n2: 2, E: 1, A: 1, L: 2.236, p0: 0, pL: 0, py: '' }
+      ];
+      this.forces = [
+        { node: 4, px: -1, py: -2, m: 0 }
+      ];
+    } else if (exId === 'ex4') {
+      this.subType = 'barra2d';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'rollerX', angle: 30 },
+        { id: 2, x: 1, y: 2, support: 'none', angle: 0 },
+        { id: 3, x: 2, y: 0, support: 'pinned', angle: 0 },
+        { id: 4, x: 3, y: 2, support: 'pinned', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'bar', n1: 1, n2: 2, E: 1, A: 1, L: 2.236, p0: 0, pL: 0, py: '' },
+        { id: 2, type: 'bar', n1: 3, n2: 2, E: 1, A: 1, L: 2.236, p0: 0, pL: 0, py: '' },
+        { id: 3, type: 'bar', n1: 2, n2: 4, E: 2, A: 1, L: 2, p0: 0, pL: 0, py: '' }
+      ];
+      this.forces = [
+        { node: 2, px: 3, py: 2, m: 0 }
+      ];
+    } else if (exId === 'ex5') {
+      this.subType = 'barra2d';
+      this.nodes = [
+        { id: 1, x: -1, y: 2, support: 'pinned', angle: 0 },
+        { id: 2, x: 0, y: 0, support: 'none', angle: 0 },
+        { id: 3, x: 1, y: 0, support: 'rollerX', angle: -20 },
+        { id: 4, x: 0, y: -2, support: 'pinned', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'bar', n1: 1, n2: 2, E: 1, A: 1, L: 2.236, p0: 0, pL: 0, py: '' },
+        { id: 2, type: 'bar', n1: 4, n2: 2, E: 1, A: 1, L: 2, p0: 0, pL: 0, py: '' },
+        { id: 3, type: 'bar', n1: 2, n2: 3, E: 2, A: 1, L: 1, p0: 0, pL: 0, py: '' }
+      ];
+      this.forces = [
+        { node: 2, px: 1.879, py: 0.684, m: 0 }
+      ];
+    } else if (exId === 'ex6') {
+      this.subType = 'barra2d';
+      this.nodes = [
+        { id: 1, x: 2, y: 4, support: 'pinned', angle: 0 },
+        { id: 2, x: 0, y: 2, support: 'rollerX', angle: 90 },
+        { id: 3, x: 0, y: 0, support: 'rollerY', angle: 0 },
+        { id: 4, x: 2, y: 2, support: 'rollerX', angle: 90 }
+      ];
+      this.elements = [
+        { id: 1, type: 'bar', n1: 3, n2: 2, E: 1, A: 1, L: 2, p0: 0, pL: 0, py: '' },
+        { id: 2, type: 'bar', n1: 4, n2: 1, E: 1, A: 1, L: 2, p0: 0, pL: 0, py: '' },
+        { id: 3, type: 'bar', n1: 2, n2: 1, E: 1, A: 1, L: 2.828, p0: 0, pL: 0, py: '' },
+        { id: 4, type: 'bar', n1: 3, n2: 4, E: 1, A: 1, L: 2.828, p0: 0, pL: 0, py: '' }
+      ];
+      this.forces = [
+        { node: 3, px: -3, py: 0, m: 0 },
+        { node: 4, px: 0, py: -1, m: 0 }
+      ];
+    } else if (exId === 'ex7') {
+      this.subType = 'viga';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'fixed', angle: 0 },
+        { id: 2, x: 4, y: 0, support: 'pinned', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'beam', n1: 1, n2: 2, E: 1, A: 1, I: 1, L: 4, p0: -0.5, pL: -1, py: '' }
+      ];
+      this.forces = [];
+    } else if (exId === 'ex8') {
+      this.subType = 'viga';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'pinned', angle: 0 },
+        { id: 2, x: 2, y: 0, support: 'none', angle: 0 },
+        { id: 3, x: 4, y: 0, support: 'pinned', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'beam', n1: 1, n2: 2, E: 1, A: 1, I: 1, L: 2, p0: 0, pL: -1, py: '' },
+        { id: 2, type: 'beam', n1: 2, n2: 3, E: 1, A: 1, I: 1, L: 2, p0: -1, pL: 0, py: '' }
+      ];
+      this.forces = [];
+    } else if (exId === 'ex9') {
+      this.subType = 'viga';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'fixed', angle: 0 },
+        { id: 2, x: 4, y: 0, support: 'pinned', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'beam', n1: 1, n2: 2, E: 1, A: 1, I: 1, L: 4, p0: 0, pL: -1, py: '' }
+      ];
+      this.forces = [];
+    } else if (exId === 'ex10') {
+      this.subType = 'vigabarra2d';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'fixed', angle: 0 },
+        { id: 2, x: 0.5, y: 0.5, support: 'none', angle: 0 },
+        { id: 3, x: 1, y: 1, support: 'none', angle: 0 },
+        { id: 4, x: 3, y: 1, support: 'fixed', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'frame', n1: 1, n2: 2, E: 1, A: 1, I: 1, L: 0.707, p0: 0, pL: 0, py: '' },
+        { id: 2, type: 'frame', n1: 2, n2: 3, E: 1, A: 1, I: 1, L: 0.707, p0: 0, pL: 0, py: '' },
+        { id: 3, type: 'frame', n1: 3, n2: 4, E: 1, A: 1, I: 1, L: 2, p0: -1, pL: -1, py: '' }
+      ];
+      this.forces = [
+        { node: 2, px: 0, py: -1, m: 0 }
+      ];
+    } else if (exId === 'ex11') {
+      this.subType = 'vigabarra2d';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'fixed', angle: 0 },
+        { id: 2, x: 1, y: 1, support: 'none', angle: 0 },
+        { id: 3, x: 3, y: 1, support: 'none', angle: 0 },
+        { id: 4, x: 3, y: 0, support: 'rollerY', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'frame', n1: 1, n2: 2, E: 1, A: 1, I: 1, L: 1.414, p0: -1, pL: -1, py: '' },
+        { id: 2, type: 'frame', n1: 2, n2: 3, E: 1, A: 1, I: 1, L: 2, p0: 0, pL: -1, py: '' },
+        { id: 3, type: 'frame', n1: 3, n2: 4, E: 1, A: 1, I: 1, L: 1, p0: 0, pL: 0, py: '' }
+      ];
+      this.forces = [];
+    } else if (exId === 'ex12') {
+      this.subType = 'vigabarra2d';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'fixed', angle: 0 },
+        { id: 2, x: 0.5, y: 1, support: 'none', angle: 0 },
+        { id: 3, x: 1.5, y: 1, support: 'none', angle: 0 },
+        { id: 4, x: 2, y: 0, support: 'fixed', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'frame', n1: 1, n2: 2, E: 1, A: 1, I: 1, L: 1.118, p0: 0, pL: 1, py: '' },
+        { id: 2, type: 'frame', n1: 2, n2: 3, E: 1, A: 1, I: 1, L: 1, p0: 0, pL: -1, py: 'x^3' },
+        { id: 3, type: 'frame', n1: 3, n2: 4, E: 1, A: 1, I: 1, L: 1.118, p0: 1, pL: 1, py: '' }
+      ];
+      this.forces = [];
+    } else if (exId === 'ex13') {
+      this.subType = 'viga';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'fixed', angle: 0 },
+        { id: 2, x: 2, y: 0, support: 'none', angle: 0 },
+        { id: 3, x: 4, y: 0, support: 'fixed', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'beam', n1: 1, n2: 2, E: 1, A: 1, I: 1, L: 2, p0: 3, pL: 3, py: '' },
+        { id: 2, type: 'beam', n1: 2, n2: 3, E: 1, A: 1, I: 1, L: 2, p0: 3, pL: 2, py: '' }
+      ];
+      this.forces = [];
+    } else if (exId === 'ex14') {
+      this.subType = 'mola';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'pinned', angle: 0 },
+        { id: 2, x: 1.5, y: 0, support: 'none', angle: 0 },
+        { id: 3, x: 3.0, y: 0, support: 'none', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'spring', n1: 1, n2: 2, E: 1, A: 1, I: 1, L: 0, p0: 0, pL: 0, py: '' },
+        { id: 2, type: 'spring', n1: 2, n2: 3, E: 2, A: 1, I: 1, L: 0, p0: 0, pL: 0, py: '' }
+      ];
+      this.forces = [
+        { node: 2, px: 1, py: 0, m: 0 },
+        { node: 3, px: 1, py: 0, m: 0 }
+      ];
+    } else if (exId === 'ex15') {
+      this.subType = 'vigabarra2d';
+      this.nodes = [
+        { id: 1, x: 0, y: 0, support: 'fixed', angle: 0 },
+        { id: 2, x: 1, y: -1, support: 'none', angle: 0 },
+        { id: 3, x: 3, y: -1, support: 'none', angle: 0 },
+        { id: 4, x: 3, y: -2, support: 'fixed', angle: 0 }
+      ];
+      this.elements = [
+        { id: 1, type: 'frame', n1: 1, n2: 2, E: 1, A: 1, I: 1, L: 1.414, p0: 0, pL: -2, py: '' },
+        { id: 2, type: 'frame', n1: 2, n2: 3, E: 1, A: 1, I: 1, L: 2, p0: 0, pL: -2, py: 'x^2' },
+        { id: 3, type: 'frame', n1: 3, n2: 4, E: 1, A: 1, I: 1, L: 1, p0: -3, pL: -3, py: '' }
+      ];
+      this.forces = [];
+    }
 
     this.renderWorkspace();
     this.solve();
