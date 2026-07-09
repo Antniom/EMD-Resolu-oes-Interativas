@@ -108,5 +108,23 @@ function switchSubject(subjectId) {
 }
 
 // Boot the application
-renderAppShell();
-switchSubject(currentSubjectId);
+function bootApp() {
+  const app = document.getElementById('app');
+  if (!app) {
+    // If DOM is not fully ready, wait for it
+    document.addEventListener('DOMContentLoaded', () => {
+      const appRetry = document.getElementById('app');
+      if (appRetry) {
+        renderAppShell();
+        switchSubject(currentSubjectId);
+      } else {
+        console.error("EMD Resolucoes: Elemento #app nao encontrado no DOM.");
+      }
+    });
+    return;
+  }
+  renderAppShell();
+  switchSubject(currentSubjectId);
+}
+
+bootApp();
