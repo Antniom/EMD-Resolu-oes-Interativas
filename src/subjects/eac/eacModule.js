@@ -11,7 +11,7 @@ export class EacModule extends SubjectTemplate {
   constructor(containerElement, onModelChange) {
     super(containerElement, onModelChange);
     this.id = 'eac';
-    this.name = 'Estruturas de Alma Cheia (EAC)';
+    this.name = 'Engenharia Assistida por Computador (EAC)';
 
     // State
     this.subType = 'barra2d'; // barra2d, viga, mola, vigabarra2d
@@ -39,18 +39,36 @@ export class EacModule extends SubjectTemplate {
     // Set default exercise based on subType
     this.loadDefaultModel();
 
-    // Create dual-column UI shell
-    const grid = document.createElement('div');
-    grid.className = 'grid grid-cols-1 lg:grid-cols-12 gap-6 h-full items-stretch';
+    // Create the outer wrapper layout
+    const layout = document.createElement('div');
+    layout.className = 'flex flex-col gap-6 w-full animate-fade-in';
 
-    // Left column: workspace (editor or table)
-    const leftCol = document.createElement('div');
-    leftCol.className = 'lg:col-span-7 flex flex-col gap-4';
+    // 1. Header Toolbar Panel (Card-style top control bar)
+    const headerPanel = document.createElement('div');
+    headerPanel.className = 'card flex flex-col xl:flex-row justify-between items-center gap-4 bg-[var(--bg-card)] border border-[var(--panel-border)] p-4 rounded-2xl shadow-sm';
 
-    // Tab buttons for Workspace (Editor / Table)
-    const wsHeader = document.createElement('div');
-    wsHeader.className = 'flex justify-between items-center bg-[var(--bg-main)] p-1.5 rounded-xl border border-[var(--panel-border)]';
+    // Left section: Select subType + Workspace Tabs
+    const leftSection = document.createElement('div');
+    leftSection.className = 'flex flex-wrap items-center gap-4 w-full xl:w-auto justify-between xl:justify-start';
 
+    // Structural subType selectors
+    const subTypeSelect = document.createElement('select');
+    subTypeSelect.id = 'subtype-selector';
+    subTypeSelect.className = 'select-input text-sm py-1.5 px-3 rounded-lg bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]';
+    subTypeSelect.innerHTML = `
+      <option value="barra2d">Treliças (Barras 2D)</option>
+      <option value="viga">Vigas (Flexão 1D)</option>
+      <option value="mola">Sistemas de Molas</option>
+      <option value="vigabarra2d">Pórticos (Viga-Barra 2D)</option>
+    `;
+    subTypeSelect.value = this.subType;
+    leftSection.appendChild(subTypeSelect);
+
+    const divider = document.createElement('div');
+    divider.className = 'hidden md:block w-[1px] h-6 bg-[var(--panel-border)]';
+    leftSection.appendChild(divider);
+
+    // Tab buttons for Workspace (Visual 2D / Table / Resolution)
     const wsTabs = document.createElement('div');
     wsTabs.className = 'flex gap-2';
 
@@ -64,89 +82,97 @@ export class EacModule extends SubjectTemplate {
     tableTabBtn.innerText = 'Matriz de Código (m.c.)';
     tableTabBtn.id = 'tab-table-btn';
 
+    const resolutionTabBtn = document.createElement('button');
+    resolutionTabBtn.className = 'tab-btn';
+    resolutionTabBtn.innerText = 'Resolução Detalhada';
+    resolutionTabBtn.id = 'tab-resolution-btn';
+
     wsTabs.appendChild(editorTabBtn);
     wsTabs.appendChild(tableTabBtn);
-    wsHeader.appendChild(wsTabs);
+    wsTabs.appendChild(resolutionTabBtn);
+    leftSection.appendChild(wsTabs);
+    headerPanel.appendChild(leftSection);
 
-    // Structural subType selectors
-    const subTypeSelect = document.createElement('select');
-    subTypeSelect.className = 'select-input text-sm py-1 px-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]';
-    subTypeSelect.innerHTML = `
-      <option value="barra2d">Treliças (Barras 2D)</option>
-      <option value="viga">Vigas (Flexão 1D)</option>
-      <option value="mola">Sistemas de Molas</option>
-      <option value="vigabarra2d">Pórticos (Viga-Barra 2D)</option>
-    `;
-    subTypeSelect.value = this.subType;
-    subTypeSelect.onchange = (e) => {
-      this.subType = e.target.value;
-      this.loadDefaultModel();
-      this.solve();
-      this.renderWorkspace();
-    };
-    wsHeader.appendChild(subTypeSelect);
-    leftCol.appendChild(wsHeader);
+    // Right section: Storage controls row
+    const rightSection = document.createElement('div');
+    rightSection.className = 'flex flex-wrap items-center gap-3 w-full xl:w-auto justify-end';
 
-    // Workspace panels container
-    const wsContent = document.createElement('div');
-    wsContent.className = 'flex-1 min-h-[460px] relative glass-panel rounded-2xl overflow-hidden';
-    
-    // Editor Panel
+    // Storage Name Input
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Nome do exercício...';
+    nameInput.className = 'w-44 bg-[var(--bg-card)] border border-[var(--panel-border)] focus:border-[var(--accent)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] outline-none shadow-sm';
+    rightSection.appendChild(nameInput);
+
+    // Save Button
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn btn-secondary py-1.5 px-3 text-xs font-semibold shadow-sm';
+    saveBtn.innerText = 'Gravar';
+    rightSection.appendChild(saveBtn);
+
+    // Load Select
+    const select = document.createElement('select');
+    select.className = 'w-48 bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] text-xs py-1.5 px-3 rounded-lg outline-none shadow-sm';
+    rightSection.appendChild(select);
+
+    // Load Button
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'btn btn-secondary py-1.5 px-3 text-xs font-semibold shadow-sm';
+    loadBtn.innerText = 'Carregar';
+    rightSection.appendChild(loadBtn);
+
+    headerPanel.appendChild(rightSection);
+    layout.appendChild(headerPanel);
+
+    // 2. Active content area
+    const contentArea = document.createElement('div');
+    contentArea.className = 'w-full min-h-[500px] flex flex-col relative';
+
+    // Panel 1: Canvas Editor Panel
     const editorPanel = document.createElement('div');
-    editorPanel.className = 'absolute inset-0 flex flex-col';
+    editorPanel.className = 'w-full flex flex-col glass-panel rounded-2xl overflow-hidden h-[600px]';
     editorPanel.id = 'panel-editor';
-    
-    // Add editor toolbar
     const toolbar = this.createEditorToolbar();
     editorPanel.appendChild(toolbar);
-
     const canvas = document.createElement('canvas');
     canvas.className = 'flex-1 bg-[#FAF8F5] block outline-none cursor-crosshair';
     editorPanel.appendChild(canvas);
-    wsContent.appendChild(editorPanel);
+    contentArea.appendChild(editorPanel);
 
-    // Table Input Panel
+    // Panel 2: Table Spreadsheet Panel
     const tablePanel = document.createElement('div');
-    tablePanel.className = 'absolute inset-0 overflow-y-auto p-4 hidden';
+    tablePanel.className = 'w-full glass-panel rounded-2xl p-4 overflow-y-auto hidden min-h-[400px] bg-[var(--bg-card)]';
     tablePanel.id = 'panel-table';
-    wsContent.appendChild(tablePanel);
+    contentArea.appendChild(tablePanel);
 
-    leftCol.appendChild(wsContent);
-    grid.appendChild(leftCol);
+    // Panel 3: Step-by-Step Resolution Panel
+    const resolutionPanel = document.createElement('div');
+    resolutionPanel.className = 'w-full flex flex-col gap-4 hidden';
+    resolutionPanel.id = 'panel-resolution';
 
-    // Right column: resolution, options, storage
-    const rightCol = document.createElement('div');
-    rightCol.className = 'lg:col-span-5 flex flex-col gap-4';
-
-    // Resolution options card
-    const optionsCard = document.createElement('div');
-    optionsCard.className = 'glass-panel rounded-2xl p-4 flex flex-col gap-3';
+    // Top options selector pills inside resolution panel
+    const optBar = document.createElement('div');
+    optBar.className = 'flex flex-col gap-2 p-4 bg-[var(--bg-card)] border border-[var(--panel-border)] rounded-2xl shadow-sm';
     
-    const optTitle = document.createElement('h3');
-    optTitle.className = 'text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1';
-    optTitle.innerText = 'Resultados a Visualizar';
-    optionsCard.appendChild(optTitle);
+    const optTitle = document.createElement('h4');
+    optTitle.className = 'text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1';
+    optTitle.innerText = 'Selecione o Resultado a Analisar:';
+    optBar.appendChild(optTitle);
 
     const optList = document.createElement('div');
-    optList.className = 'flex flex-col gap-2';
-    optionsCard.appendChild(optList);
+    optList.id = 'options-pills-list';
+    optList.className = 'flex flex-wrap gap-2';
+    optBar.appendChild(optList);
 
-    const resolveBtn = document.createElement('button');
-    resolveBtn.className = 'btn btn-primary w-full mt-2 py-2.5 font-semibold';
-    resolveBtn.innerText = 'Calcular Exercício';
-    resolveBtn.onclick = () => this.solve();
-    optionsCard.appendChild(resolveBtn);
+    const subOptContainer = document.createElement('div');
+    subOptContainer.id = 'sub-options-container';
+    optBar.appendChild(subOptContainer);
 
-    rightCol.appendChild(optionsCard);
+    resolutionPanel.appendChild(optBar);
 
-    // Storage card
-    const storageCard = this.createStoragePanel();
-    rightCol.appendChild(storageCard);
-
-    // Resolution output panel
+    // Step-by-step resolution card
     const resolutionCard = document.createElement('div');
-    resolutionCard.className = 'flex-1 glass-panel rounded-2xl p-5 overflow-y-auto min-h-[300px] flex flex-col gap-4';
-    resolutionCard.id = 'resolution-card';
+    resolutionCard.className = 'glass-panel rounded-2xl p-6 bg-[var(--bg-card)] border border-[var(--panel-border)] shadow-sm flex flex-col gap-4';
     
     const resTitle = document.createElement('h3');
     resTitle.className = 'text-lg font-bold text-[var(--text-primary)] border-b border-[var(--panel-border)] pb-2 flex justify-between items-center';
@@ -158,17 +184,17 @@ export class EacModule extends SubjectTemplate {
     resOutput.className = 'text-[var(--text-primary)] space-y-4 text-sm leading-relaxed';
     resolutionCard.appendChild(resOutput);
 
-    rightCol.appendChild(resolutionCard);
-    grid.appendChild(rightCol);
+    resolutionPanel.appendChild(resolutionCard);
+    contentArea.appendChild(resolutionPanel);
 
-    this.container.appendChild(grid);
+    layout.appendChild(contentArea);
+    this.container.appendChild(layout);
 
     // Initialize Canvas Editor instance
     this.editor = new EacEditor(canvas, (nodes, elements, forces) => {
       this.nodes = nodes;
       this.elements = elements;
       this.forces = forces;
-      // sync to table if table panel is open, or it will sync on tab open
       if (this.mcInput) {
         this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
       }
@@ -181,31 +207,74 @@ export class EacModule extends SubjectTemplate {
       this.nodes = nodes;
       this.elements = elements;
       this.forces = forces;
-      // Sync to editor canvas
       if (this.editor) {
         this.editor.setModel(this.nodes, this.elements, this.forces);
       }
       this.solveSilently();
     });
 
+    // Storage bindings
+    saveBtn.onclick = () => {
+      const name = nameInput.value.trim();
+      if (name) {
+        const state = this.saveState();
+        const res = saveExercise(this.id, name, state);
+        if (res.success) {
+          nameInput.value = '';
+          this.updateSavedList(select);
+        }
+      }
+    };
+    loadBtn.onclick = () => {
+      const name = select.value;
+      if (name) {
+        const state = loadExercise(this.id, name);
+        if (state) {
+          this.loadState(state);
+        }
+      }
+    };
+    this.updateSavedList(select);
+
     // Tab bindings
     editorTabBtn.onclick = () => {
       editorTabBtn.classList.add('active');
       tableTabBtn.classList.remove('active');
+      resolutionTabBtn.classList.remove('active');
       editorPanel.classList.remove('hidden');
       tablePanel.classList.add('hidden');
+      resolutionPanel.classList.add('hidden');
       this.editor.resizeCanvas();
     };
 
     tableTabBtn.onclick = () => {
       tableTabBtn.classList.add('active');
       editorTabBtn.classList.remove('active');
+      resolutionTabBtn.classList.remove('active');
       tablePanel.classList.remove('hidden');
       editorPanel.classList.add('hidden');
+      resolutionPanel.classList.add('hidden');
       this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
     };
 
-    // Render workspace tabs and resolve initially
+    resolutionTabBtn.onclick = () => {
+      resolutionTabBtn.classList.add('active');
+      editorTabBtn.classList.remove('active');
+      tableTabBtn.classList.remove('active');
+      resolutionPanel.classList.remove('hidden');
+      editorPanel.classList.add('hidden');
+      tablePanel.classList.add('hidden');
+      this.solve();
+    };
+
+    subTypeSelect.onchange = (e) => {
+      this.subType = e.target.value;
+      this.loadDefaultModel();
+      this.solve();
+      this.renderWorkspace();
+    };
+
+    // Render initial workspace and resolve
     this.renderWorkspace();
     this.solve();
   }
@@ -218,7 +287,7 @@ export class EacModule extends SubjectTemplate {
   }
 
   updateOptionsList() {
-    const list = this.container.querySelector('.flex.flex-col.gap-2');
+    const list = this.container.querySelector('#options-pills-list');
     if (!list) return;
 
     let options = [
@@ -252,16 +321,15 @@ export class EacModule extends SubjectTemplate {
     list.innerHTML = '';
     options.forEach(opt => {
       const btn = document.createElement('button');
-      btn.className = `btn flex justify-between items-center text-left py-2 px-3 text-sm rounded-lg transition-all border ${
+      btn.className = `btn py-1.5 px-4 text-xs rounded-full border transition-all ${
         this.activeOption === opt.id 
-          ? 'bg-[var(--accent-glow)] border-[var(--accent)] text-[var(--accent-strong)] font-medium' 
-          : 'bg-[var(--bg-card)] border-[var(--panel-border)] text-[var(--text-secondary)] hover:border-[var(--text-primary)]'
+          ? 'bg-[var(--accent)] border-[var(--accent)] text-white font-medium shadow-sm' 
+          : 'bg-[var(--bg-card)] border-[var(--panel-border)] text-[var(--text-secondary)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]'
       }`;
-      btn.innerHTML = `<span>${opt.label}</span>${this.activeOption === opt.id ? '<span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse"></span>' : ''}`;
+      btn.innerText = opt.label;
       btn.onclick = () => {
         this.activeOption = opt.id;
         this.updateOptionsList();
-        // check if sub-option inputs (activeBar or activeX) are needed
         this.renderSubOptions(opt.id);
         this.solve();
       };
@@ -272,18 +340,18 @@ export class EacModule extends SubjectTemplate {
   }
 
   renderSubOptions(optionId) {
-    const list = this.container.querySelector('.flex.flex-col.gap-2');
-    const existingSub = this.container.querySelector('#sub-options-panel');
-    if (existingSub) existingSub.remove();
+    const container = this.container.querySelector('#sub-options-container');
+    if (!container) return;
+    container.innerHTML = '';
 
     if (optionId === 3 && (this.subType === 'barra2d' || this.subType === 'viga')) {
       const panel = document.createElement('div');
       panel.id = 'sub-options-panel';
-      panel.className = 'mt-2 p-3 bg-[var(--bg-main)] border border-[var(--panel-border)] rounded-xl flex flex-col gap-2';
+      panel.className = 'mt-2 p-3 bg-[var(--bg-main)] border border-[var(--panel-border)] rounded-xl flex items-center gap-4 text-xs';
 
       const barSelect = document.createElement('div');
-      barSelect.className = 'flex justify-between items-center';
-      barSelect.innerHTML = `<span class="text-xs text-[var(--text-secondary)]">Selecionar elemento:</span>`;
+      barSelect.className = 'flex items-center gap-2';
+      barSelect.innerHTML = `<span class="text-[var(--text-secondary)] font-medium">Elemento:</span>`;
       
       const select = document.createElement('select');
       select.className = 'select-input text-xs py-0.5 px-2 bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] rounded';
@@ -301,8 +369,8 @@ export class EacModule extends SubjectTemplate {
       panel.appendChild(barSelect);
 
       const xInput = document.createElement('div');
-      xInput.className = 'flex justify-between items-center';
-      xInput.innerHTML = `<span class="text-xs text-[var(--text-secondary)]">Coordenada x (coef. de L):</span>`;
+      xInput.className = 'flex items-center gap-2';
+      xInput.innerHTML = `<span class="text-[var(--text-secondary)] font-medium">Coordenada x (coef. de L):</span>`;
       
       const input = document.createElement('input');
       input.type = 'number';
@@ -318,7 +386,7 @@ export class EacModule extends SubjectTemplate {
       xInput.appendChild(input);
       panel.appendChild(xInput);
 
-      list.appendChild(panel);
+      container.appendChild(panel);
     }
   }
 
@@ -671,7 +739,6 @@ export class EacModule extends SubjectTemplate {
     }
   }
 
-  // Primary solving routine, compiling LaTeX step descriptions to UI
   solve() {
     this.solveSilently();
 
@@ -679,7 +746,7 @@ export class EacModule extends SubjectTemplate {
     if (!output) return;
 
     if (!this.solvedResult || this.solvedResult.error) {
-      output.innerHTML = `<div class="p-4 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl text-center">
+      output.innerHTML = `<div class="p-4 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl text-center font-medium">
         Problema singular ou graus de liberdade insuficientes. Complete a estrutura aplicando apoios convenientes.
       </div>`;
       return;
@@ -689,15 +756,15 @@ export class EacModule extends SubjectTemplate {
 
     // Render step-by-step stiffness matrix assembly
     const kSection = document.createElement('div');
-    kSection.className = 'p-4 bg-slate-950/40 border border-slate-900 rounded-xl space-y-2';
-    kSection.innerHTML = '<h4 class="font-semibold text-slate-200 mb-2">1. Matriz de Rigidez do Sistema</h4>';
+    kSection.className = 'p-4 bg-[var(--bg-main)] border border-[var(--panel-border)] rounded-xl space-y-2';
+    kSection.innerHTML = '<h4 class="font-semibold text-[var(--text-primary)] mb-2">1. Matriz de Rigidez do Sistema</h4>';
     const kOutput = document.createElement('div');
-    kOutput.className = 'space-y-1 font-mono text-xs text-sky-300';
+    kOutput.className = 'space-y-1 font-mono text-[11px] text-[var(--text-primary)]';
     this.solvedResult.steps.slice(0, 15).forEach(line => {
       kOutput.innerHTML += `<div>${line}</div>`;
     });
     if (this.solvedResult.steps.length > 15) {
-      kOutput.innerHTML += `<div class="text-slate-500 italic mt-1">+ ${this.solvedResult.steps.length - 15} termos de rigidez assemblados...</div>`;
+      kOutput.innerHTML += `<div class="text-[var(--text-tertiary)] italic mt-1">+ ${this.solvedResult.steps.length - 15} termos de rigidez assemblados...</div>`;
     }
     kSection.appendChild(kOutput);
     output.appendChild(kSection);
@@ -711,13 +778,15 @@ export class EacModule extends SubjectTemplate {
         const level = block.startsWith('####') ? 4 : 3;
         const text = block.replace(/#/g, '').trim();
         const header = document.createElement(`h${level}`);
-        header.className = level === 3 ? 'text-base font-bold text-slate-200 mt-4' : 'text-sm font-semibold text-slate-400 mt-2';
-        header.innerText = text;
+        header.className = level === 3 
+          ? 'text-base font-bold text-[var(--text-primary)] mt-6 mb-2 border-b border-[var(--panel-border)]/40 pb-1' 
+          : 'text-sm font-semibold text-[var(--text-secondary)] mt-4 mb-1';
+        renderLaTeXText(text, header);
         resSection.appendChild(header);
       } else if (block.startsWith('$$')) {
         const math = block.slice(2, -2).trim();
         const div = document.createElement('div');
-        div.className = 'my-3 overflow-x-auto text-center';
+        div.className = 'my-4 overflow-x-auto text-center py-2';
         
         if (window.katex) {
           try {
@@ -732,13 +801,13 @@ export class EacModule extends SubjectTemplate {
       } else if (block.startsWith('*') || block.startsWith('-')) {
         const text = block.substring(1).trim();
         const li = document.createElement('div');
-        li.className = 'text-xs text-slate-400 pl-4 relative before:content-["•"] before:absolute before:left-1 before:text-sky-500';
-        li.innerText = text;
+        li.className = 'text-xs text-[var(--text-secondary)] pl-4 relative before:content-["•"] before:absolute before:left-1 before:text-[var(--accent)]';
+        renderLaTeXText(text, li);
         resSection.appendChild(li);
       } else {
         const p = document.createElement('p');
-        p.className = 'text-xs text-slate-400';
-        p.innerText = block;
+        p.className = 'text-xs text-[var(--text-secondary)] leading-relaxed';
+        renderLaTeXText(block, p);
         resSection.appendChild(p);
       }
     });
@@ -793,7 +862,7 @@ export class EacModule extends SubjectTemplate {
     this.forces = state.forces || [];
 
     // Sync subType select element in UI
-    const subTypeSelect = this.container.querySelector('select');
+    const subTypeSelect = this.container.querySelector('#subtype-selector');
     if (subTypeSelect) subTypeSelect.value = this.subType;
 
     this.renderWorkspace();
@@ -802,20 +871,44 @@ export class EacModule extends SubjectTemplate {
 
   getHelpText() {
     return `
-### Estruturas de Alma Cheia (EAC)
+### Engenharia Assistida por Computador (EAC)
 
-Este módulo permite resolver sistemas estruturais compostos por:
-- **Sistemas de Molas:** Barras unidimensionais elásticas lineares.
-- **Treliças (Barras 2D):** Elementos articulados sob forças axiais (tração/compressão).
-- **Vigas:** Elementos de viga plana sob flexão elástica de Euler-Bernoulli.
-- **Pórticos (Viga-Barra 2D):** Combinação de flexão e esforços axiais.
+Este módulo permite resolver e visualizar sistemas estruturais elásticos pelo Método dos Elementos Finitos (M.E.F.):
+- **Sistemas de Molas:** Molas 1D elásticas lineares.
+- **Treliças (Barras 2D):** Elementos articulados sob esforços puramente axiais.
+- **Vigas:** Flexão de vigas sob carregamento transversal (Euler-Bernoulli).
+- **Pórticos (Viga-Barra 2D):** Pórticos rígidos planos sob flexão, corte e esforço axial combinados.
 
-#### Como construir o modelo:
-1. Adicione os **Nós** com as coordenadas cartesianas adequadas.
-2. Adicione os **Elementos** ligando os nós.
-3. Configure os **Apoios** (Encastrado, Fixo, Móvel vertical/horizontal, ou Inclined).
-4. Aplique as **Cargas** nodais (Força P, Momento M) ou distribuídas (p) nas vigas.
-5. Selecione a aba **Resolução** e o tipo de resultado pretendido.
+#### Instruções de Utilização:
+1. **Modelar (Aba 1):** Use as ferramentas para desenhar nós e elementos. Adicione apoios e forças convenientes.
+2. **Matriz de Código (Aba 2):** Inspecione a tabela de conectividade (m.c.) e cargas nodais geradas, ou digite os graus de liberdade diretamente para sincronizar.
+3. **Resolução Detalhada (Aba 3):** Escolha o resultado pretendido (Deslocamentos, Esforços ou Vibrações) para obter os passos completos detalhados em fórmulas matemáticas.
     `;
   }
+}
+
+// Inline LaTeX parsing helper to render math formulas mixed with normal text
+function renderLaTeXText(text, containerElement) {
+  if (!window.katex) {
+    containerElement.innerText = text;
+    return;
+  }
+  
+  const parts = text.split('$');
+  containerElement.innerHTML = '';
+  
+  parts.forEach((part, index) => {
+    if (index % 2 === 1) {
+      const span = document.createElement('span');
+      try {
+        span.innerHTML = window.katex.renderToString(part, { displayMode: false, throwOnError: false });
+      } catch (e) {
+        span.innerText = `$${part}$`;
+      }
+      containerElement.appendChild(span);
+    } else {
+      const node = document.createTextNode(part);
+      containerElement.appendChild(node);
+    }
+  });
 }

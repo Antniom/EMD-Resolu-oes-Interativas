@@ -52,8 +52,6 @@ body {
     color: var(--text-primary);
     background: var(--bg-main);
     line-height: 1.6;
-    height: 100vh;
-    overflow: hidden;
 }
 
 h1, h2, h3, h4 {
@@ -190,6 +188,10 @@ input:focus, select:focus {
 .tab-btn.active {
     background: var(--text-primary);
     color: #ffffff;
+}
+
+.tab-btn.active:hover {
+    background: var(--accent);
 }
 
 /* --- Editor Toolbar & Workspace --- */

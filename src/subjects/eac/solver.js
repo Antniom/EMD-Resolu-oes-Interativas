@@ -186,24 +186,25 @@ function solveMolas(state) {
     resolutionLines.push("### Equações de Equilíbrio $[K]\\{u\\} = \\{F\\}$:");
     for (let b in baseTerms) {
       resolutionLines.push(`**Em termos de $${b}$:**`);
-      resolutionLines.push("$$\\begin{bmatrix}");
+      let matStr = "$$\\begin{bmatrix}\n";
       for (let i = 0; i < nMass; i++) {
         let rStr = "";
         for (let j = 0; j < nMass; j++) {
           rStr += `${exprFormatNumber(Kbar[i][j])} & `;
         }
-        resolutionLines.push(`  ${rStr.slice(0, -3)} \\\\`);
+        matStr += `  ${rStr.slice(0, -3)} \\\\\n`;
       }
-      resolutionLines.push("\\end{bmatrix} \\begin{Bmatrix}");
+      matStr += "\\end{bmatrix} \\begin{Bmatrix}\n";
       for (let i = 0; i < nMass; i++) {
-        resolutionLines.push(`  u_${i+1} \\\\`);
+        matStr += `  u_${i+1} \\\\\n`;
       }
-      resolutionLines.push("\\end{Bmatrix} = \\begin{Bmatrix}");
+      matStr += "\\end{Bmatrix} = \\begin{Bmatrix}\n";
       for (let i = 0; i < nMass; i++) {
         const coef = F[i].getCoeff(b);
-        resolutionLines.push(`  ${exprFormatNumber(coef)}${b} \\\\`);
+        matStr += `  ${exprFormatNumber(coef)}${b} \\\\\n`;
       }
-      resolutionLines.push("\\end{Bmatrix}$$");
+      matStr += "\\end{Bmatrix}$$";
+      resolutionLines.push(matStr);
     }
 
     resolutionLines.push("### Resolução dos Deslocamentos:");
@@ -236,7 +237,7 @@ function solveMolas(state) {
     resolutionLines.push("$$\\left| [K] - \\omega^2 [M] \\right| = 0$$");
 
     const M_num = M.toNumeric("m");
-    resolutionLines.push("$$\\det \\begin{bmatrix}");
+    let detStr = "$$\\det \\begin{bmatrix}\n";
     for (let i = 0; i < nMass; i++) {
       let rStr = "";
       for (let j = 0; j < nMass; j++) {
@@ -248,9 +249,10 @@ function solveMolas(state) {
         }
         rStr += `${term} & `;
       }
-      resolutionLines.push(`  ${rStr.slice(0, -3)} \\\\`);
+      detStr += `  ${rStr.slice(0, -3)} \\\\\n`;
     }
-    resolutionLines.push(`\\end{bmatrix} = 0 \\quad \\text{com } \\lambda = \\frac{\\omega^2 m}{k}$$`);
+    detStr += `\\end{bmatrix} = 0 \\quad \\text{com } \\lambda = \\frac{\\omega^2 m}{k}$$`;
+    resolutionLines.push(detStr);
 
     const lams = solveEigenvalues(Kbar, M_num, nMass);
     if (lams.length === 0) {
@@ -273,11 +275,12 @@ function solveMolas(state) {
         const phi = buildModeShapeVector(A_sub);
         resolutionLines.push(`**Modo ${idx+1} ($\\lambda_{${idx+1}} = ${exprFormatNumber(lam)}$):**`);
         if (phi) {
-          resolutionLines.push("$$\\Phi_{" + (idx+1) + "} = \\begin{Bmatrix}");
+          let phiStr = "$$\\Phi_{" + (idx+1) + "} = \\begin{Bmatrix}\n";
           phi.forEach(val => {
-            resolutionLines.push(`  ${exprFormatNumber(val)} \\\\`);
+            phiStr += `  ${exprFormatNumber(val)} \\\\\n`;
           });
-          resolutionLines.push("\\end{Bmatrix}$$");
+          phiStr += "\\end{Bmatrix}$$";
+          resolutionLines.push(phiStr);
         }
       });
     }
@@ -426,24 +429,25 @@ function solveBarra2D(state) {
     resolutionLines.push("### Equações de Equilíbrio $[K]\\{U\\} = \\{F\\}$:");
     for (let b in baseTerms) {
       resolutionLines.push(`**Em termos de $${b}$:**`);
-      resolutionLines.push("$$\\frac{EA}{L} \\begin{bmatrix}");
+      let matStr = "$$\\frac{EA}{L} \\begin{bmatrix}\n";
       for (let i = 0; i < nDof; i++) {
         let rStr = "";
         for (let j = 0; j < nDof; j++) {
           rStr += `${exprFormatNumber(Kbar[i][j])} & `;
         }
-        resolutionLines.push(`  ${rStr.slice(0, -3)} \\\\`);
+        matStr += `  ${rStr.slice(0, -3)} \\\\\n`;
       }
-      resolutionLines.push("\\end{bmatrix} \\begin{Bmatrix}");
+      matStr += "\\end{bmatrix} \\begin{Bmatrix}\n";
       for (let i = 0; i < nDof; i++) {
-        resolutionLines.push(`  U_${i+1} \\\\`);
+        matStr += `  U_${i+1} \\\\\n`;
       }
-      resolutionLines.push("\\end{Bmatrix} = \\begin{Bmatrix}");
+      matStr += "\\end{Bmatrix} = \\begin{Bmatrix}\n";
       for (let i = 0; i < nDof; i++) {
         const coef = F[i].getCoeff(b);
-        resolutionLines.push(`  ${exprFormatNumber(coef)}${b} \\\\`);
+        matStr += `  ${exprFormatNumber(coef)}${b} \\\\\n`;
       }
-      resolutionLines.push("\\end{Bmatrix}$$");
+      matStr += "\\end{Bmatrix}$$";
+      resolutionLines.push(matStr);
     }
 
     resolutionLines.push("### Resolução dos Deslocamentos Nodais:");
@@ -630,7 +634,7 @@ function solveBarra2D(state) {
     const Mbar = M.toNumeric("rhoAL");
     resolutionLines.push("$$\\det \\left( \\frac{EA}{L} [Kbar] - \\omega^2 \\rho AL [Mbar] \\right| = 0$$");
     resolutionLines.push("Definindo $\\lambda = \\frac{\\omega^2 \\rho L^2}{E}$:");
-    resolutionLines.push("$$\\det \\begin{bmatrix}");
+    let detStr = "$$\\det \\begin{bmatrix}\n";
     for (let i = 0; i < nDof; i++) {
       let rStr = "";
       for (let j = 0; j < nDof; j++) {
@@ -642,9 +646,10 @@ function solveBarra2D(state) {
         }
         rStr += `${term} & `;
       }
-      resolutionLines.push(`  ${rStr.slice(0, -3)} \\\\`);
+      detStr += `  ${rStr.slice(0, -3)} \\\\\n`;
     }
-    resolutionLines.push("\\end{bmatrix} = 0$$");
+    detStr += "\\end{bmatrix} = 0$$";
+    resolutionLines.push(detStr);
 
     const lams = solveEigenvalues(Kbar, Mbar, nDof);
     if (lams.length === 0) {
@@ -667,11 +672,12 @@ function solveBarra2D(state) {
         const phi = buildModeShapeVector(A_sub);
         resolutionLines.push(`**Modo ${idx+1} ($\\lambda_{${idx+1}} = ${exprFormatNumber(lam)}$):**`);
         if (phi) {
-          resolutionLines.push("$$\\Phi_{" + (idx+1) + "} = \\begin{Bmatrix}");
+          let phiStr = "$$\\Phi_{" + (idx+1) + "} = \\begin{Bmatrix}\n";
           phi.forEach(val => {
-            resolutionLines.push(`  ${exprFormatNumber(val)} \\\\`);
+            phiStr += `  ${exprFormatNumber(val)} \\\\\n`;
           });
-          resolutionLines.push("\\end{Bmatrix}$$");
+          phiStr += "\\end{Bmatrix}$$";
+          resolutionLines.push(phiStr);
         }
       });
     }
@@ -926,24 +932,25 @@ function solveViga(state) {
     resolutionLines.push("### Equações de Equilíbrio $[K]\\{u\\} = \\{F\\}$:");
     for (let b in baseTerms) {
       resolutionLines.push(`**Em termos de $${b}$:**`);
-      resolutionLines.push("$$\\frac{EI}{L^3} \\begin{bmatrix}");
+      let matStr = "$$\\frac{EI}{L^3} \\begin{bmatrix}\n";
       for (let i = 0; i < nDof; i++) {
         let rStr = "";
         for (let j = 0; j < nDof; j++) {
           rStr += `${exprFormatNumber(Kbar[i][j])} & `;
         }
-        resolutionLines.push(`  ${rStr.slice(0, -3)} \\\\`);
+        matStr += `  ${rStr.slice(0, -3)} \\\\\n`;
       }
-      resolutionLines.push("\\end{bmatrix} \\begin{Bmatrix}");
+      matStr += "\\end{bmatrix} \\begin{Bmatrix}\n";
       for (let i = 0; i < nDof; i++) {
-        resolutionLines.push(`  u_{${i+1}} \\\\`);
+        matStr += `  u_{${i+1}} \\\\\n`;
       }
-      resolutionLines.push("\\end{Bmatrix} = \\begin{Bmatrix}");
+      matStr += "\\end{Bmatrix} = \\begin{Bmatrix}\n";
       for (let i = 0; i < nDof; i++) {
         const coef = F[i].getCoeff(b);
-        resolutionLines.push(`  ${exprFormatNumber(coef)}${b} \\\\`);
+        matStr += `  ${exprFormatNumber(coef)}${b} \\\\\n`;
       }
-      resolutionLines.push("\\end{Bmatrix}$$");
+      matStr += "\\end{Bmatrix}$$";
+      resolutionLines.push(matStr);
     }
 
     resolutionLines.push("### Resolução dos Deslocamentos/Rotações nodais:");
@@ -1128,7 +1135,7 @@ function solveViga(state) {
     const Mbar = M.toNumeric("rhoAL");
     resolutionLines.push("$$\\det \\left( \\frac{EI}{L^3} [Kbar] - \\omega^2 \\rho AL [Mbar] \\right) = 0$$");
     resolutionLines.push("Definindo autovalores $\\lambda = \\frac{\\omega^2 \\rho A L^4}{E I}$:");
-    resolutionLines.push("$$\\det \\begin{bmatrix}");
+    let detStr = "$$\\det \\begin{bmatrix}\n";
     for (let i = 0; i < nDof; i++) {
       let rStr = "";
       for (let j = 0; j < nDof; j++) {
@@ -1140,9 +1147,10 @@ function solveViga(state) {
         }
         rStr += `${term} & `;
       }
-      resolutionLines.push(`  ${rStr.slice(0, -3)} \\\\`);
+      detStr += `  ${rStr.slice(0, -3)} \\\\\n`;
     }
-    resolutionLines.push("\\end{bmatrix} = 0$$");
+    detStr += "\\end{bmatrix} = 0$$";
+    resolutionLines.push(detStr);
 
     const lams = solveEigenvalues(Kbar, Mbar, nDof);
     if (lams.length === 0) {
@@ -1165,11 +1173,12 @@ function solveViga(state) {
         const phi = buildModeShapeVector(A_sub);
         resolutionLines.push(`**Modo ${idx+1} ($\\lambda_{${idx+1}} = ${exprFormatNumber(lam)}$):**`);
         if (phi) {
-          resolutionLines.push("$$\\Phi_{" + (idx+1) + "} = \\begin{Bmatrix}");
+          let phiStr = "$$\\Phi_{" + (idx+1) + "} = \\begin{Bmatrix}\n";
           phi.forEach(val => {
-            resolutionLines.push(`  ${exprFormatNumber(val)} \\\\`);
+            phiStr += `  ${exprFormatNumber(val)} \\\\\n`;
           });
-          resolutionLines.push("\\end{Bmatrix}$$");
+          phiStr += "\\end{Bmatrix}$$";
+          resolutionLines.push(phiStr);
         }
       });
     }
@@ -1410,24 +1419,25 @@ function solveVigaBarra2D(state) {
     resolutionLines.push("### Equações de Equilíbrio $[K]\\{u\\} = \\{F\\}$:");
     for (let b in baseTerms) {
       resolutionLines.push(`**Em termos de $${b}$:**`);
-      resolutionLines.push("$$\\frac{EI}{L^3} \\begin{bmatrix}");
+      let matStr = "$$\\frac{EI}{L^3} \\begin{bmatrix}\n";
       for (let i = 0; i < nDof; i++) {
         let rStr = "";
         for (let j = 0; j < nDof; j++) {
           rStr += `${exprFormatNumber(Kbar[i][j])} & `;
         }
-        resolutionLines.push(`  ${rStr.slice(0, -3)} \\\\`);
+        matStr += `  ${rStr.slice(0, -3)} \\\\\n`;
       }
-      resolutionLines.push("\\end{bmatrix} \\begin{Bmatrix}");
+      matStr += "\\end{bmatrix} \\begin{Bmatrix}\n";
       for (let i = 0; i < nDof; i++) {
-        resolutionLines.push(`  u_{${i+1}} \\\\`);
+        matStr += `  u_{${i+1}} \\\\\n`;
       }
-      resolutionLines.push("\\end{Bmatrix} = \\begin{Bmatrix}");
+      matStr += "\\end{Bmatrix} = \\begin{Bmatrix}\n";
       for (let i = 0; i < nDof; i++) {
         const coef = F[i].getCoeff(b);
-        resolutionLines.push(`  ${exprFormatNumber(coef)}${b} \\\\`);
+        matStr += `  ${exprFormatNumber(coef)}${b} \\\\\n`;
       }
-      resolutionLines.push("\\end{Bmatrix}$$");
+      matStr += "\\end{Bmatrix}$$";
+      resolutionLines.push(matStr);
     }
 
     resolutionLines.push("### Resolução dos Deslocamentos/Rotações nodais:");
