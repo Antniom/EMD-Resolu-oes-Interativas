@@ -1282,6 +1282,63 @@ export class EacModule extends SubjectTemplate {
         iGroup.appendChild(iInput);
         overlay.appendChild(iGroup);
       }
+
+      // 5. Distributed Loads (for beam or frame elements)
+      if (el.type === 'beam' || el.type === 'frame') {
+        const pDivider = document.createElement('div');
+        pDivider.className = 'border-t border-[var(--panel-border)]/50 my-2';
+        overlay.appendChild(pDivider);
+
+        const p0Group = document.createElement('div');
+        p0Group.className = 'flex flex-col gap-1';
+        p0Group.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Carga Transversal p0 (início):</label>`;
+        const p0Input = document.createElement('input');
+        p0Input.type = 'number';
+        p0Input.step = 'any';
+        p0Input.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+        p0Input.value = el.p0 !== undefined ? el.p0 : 0;
+        p0Input.oninput = (e) => {
+          el.p0 = parseFloat(e.target.value) || 0;
+          this.solveSilently();
+          if (this.editor) this.editor.draw();
+          if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
+        };
+        p0Group.appendChild(p0Input);
+        overlay.appendChild(p0Group);
+
+        const pLGroup = document.createElement('div');
+        pLGroup.className = 'flex flex-col gap-1';
+        pLGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Carga Transversal pL (fim):</label>`;
+        const pLInput = document.createElement('input');
+        pLInput.type = 'number';
+        pLInput.step = 'any';
+        pLInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+        pLInput.value = el.pL !== undefined ? el.pL : 0;
+        pLInput.oninput = (e) => {
+          el.pL = parseFloat(e.target.value) || 0;
+          this.solveSilently();
+          if (this.editor) this.editor.draw();
+          if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
+        };
+        pLGroup.appendChild(pLInput);
+        overlay.appendChild(pLGroup);
+
+        const pyGroup = document.createElement('div');
+        pyGroup.className = 'flex flex-col gap-1';
+        pyGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Equação p(x) (ex: x^2, x^3):</label>`;
+        const pyInput = document.createElement('input');
+        pyInput.type = 'text';
+        pyInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+        pyInput.value = el.py || '';
+        pyInput.oninput = (e) => {
+          el.py = e.target.value;
+          this.solveSilently();
+          if (this.editor) this.editor.draw();
+          if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
+        };
+        pyGroup.appendChild(pyInput);
+        overlay.appendChild(pyGroup);
+      }
     } else if (type === 'node') {
       const node = this.nodes.find(n => n.id === id);
       if (!node) {
