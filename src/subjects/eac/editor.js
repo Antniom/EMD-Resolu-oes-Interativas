@@ -591,10 +591,13 @@ export class EacEditor {
     this.ctx.fill();
     this.ctx.stroke();
 
-    // Node label
+    // Node label with white outline backing to prevent overlapping
     this.ctx.fillStyle = '#565656';
-    this.ctx.font = '10px Inter';
-    this.ctx.fillText(`N${node.id}`, x + 10, y - 8);
+    this.ctx.font = 'bold 9px Inter';
+    this.ctx.strokeStyle = '#FFFFFF';
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeText(`N${node.id}`, x + 10, y - 10);
+    this.ctx.fillText(`N${node.id}`, x + 10, y - 10);
   }
 
   drawElement(el) {
@@ -776,23 +779,26 @@ export class EacEditor {
       this.ctx.strokeStyle = '#D96C53'; // Burnt Orange
       this.ctx.fillStyle = '#D96C53';
       const dir = f.px > 0 ? 1 : -1;
-      const startX = x - dir * 40;
+      const startX = x - dir * 55;
 
       this.ctx.beginPath();
       this.ctx.moveTo(startX, y);
-      this.ctx.lineTo(x - dir * 6, y);
+      this.ctx.lineTo(x - dir * 8, y);
       this.ctx.stroke();
 
       // Arrowhead
       this.ctx.beginPath();
-      this.ctx.moveTo(x - dir * 6, y);
-      this.ctx.lineTo(x - dir * 14, y - 5);
-      this.ctx.lineTo(x - dir * 14, y + 5);
+      this.ctx.moveTo(x - dir * 8, y);
+      this.ctx.lineTo(x - dir * 18, y - 6);
+      this.ctx.lineTo(x - dir * 18, y + 6);
       this.ctx.closePath();
       this.ctx.fill();
 
-      this.ctx.font = 'bold 11px Inter';
-      this.ctx.fillText(`${f.px > 0 ? '' : '-'}${Math.abs(f.px)}P`, startX, y - 8);
+      this.ctx.font = 'bold 12px Inter';
+      this.ctx.strokeStyle = '#FFFFFF';
+      this.ctx.lineWidth = 4;
+      this.ctx.strokeText(`${f.px > 0 ? '' : '-'}${Math.abs(f.px)}P`, startX - dir * 6, y - 8);
+      this.ctx.fillText(`${f.px > 0 ? '' : '-'}${Math.abs(f.px)}P`, startX - dir * 6, y - 8);
     }
 
     // Draw vertical force Py
@@ -800,23 +806,26 @@ export class EacEditor {
       this.ctx.strokeStyle = '#D96C53';
       this.ctx.fillStyle = '#D96C53';
       const dir = f.py > 0 ? 1 : -1; // up is positive, but canvas Y is down
-      const startY = y + dir * 40; // reverse direction in canvas coords
+      const startY = y + dir * 55;
 
       this.ctx.beginPath();
       this.ctx.moveTo(x, startY);
-      this.ctx.lineTo(x, y + dir * 6);
+      this.ctx.lineTo(x, y + dir * 8);
       this.ctx.stroke();
 
       // Arrowhead
       this.ctx.beginPath();
-      this.ctx.moveTo(x, y + dir * 6);
-      this.ctx.lineTo(x - 5, y + dir * 14);
-      this.ctx.lineTo(x + 5, y + dir * 14);
+      this.ctx.moveTo(x, y + dir * 8);
+      this.ctx.lineTo(x - 6, y + dir * 18);
+      this.ctx.lineTo(x + 6, y + dir * 18);
       this.ctx.closePath();
       this.ctx.fill();
 
-      this.ctx.font = 'bold 11px Inter';
-      this.ctx.fillText(`${f.py > 0 ? '' : '-'}${Math.abs(f.py)}P`, x + 8, startY);
+      this.ctx.font = 'bold 12px Inter';
+      this.ctx.strokeStyle = '#FFFFFF';
+      this.ctx.lineWidth = 4;
+      this.ctx.strokeText(`${f.py > 0 ? '' : '-'}${Math.abs(f.py)}P`, x + 10, startY + dir * 4);
+      this.ctx.fillText(`${f.py > 0 ? '' : '-'}${Math.abs(f.py)}P`, x + 10, startY + dir * 4);
     }
 
     // Draw moment
@@ -841,7 +850,10 @@ export class EacEditor {
       this.ctx.fill();
       this.ctx.restore();
 
-      this.ctx.font = 'bold 11px Inter';
+      this.ctx.font = 'bold 12px Inter';
+      this.ctx.strokeStyle = '#FFFFFF';
+      this.ctx.lineWidth = 4;
+      this.ctx.strokeText(`${f.m}M`, x - 25, y - 22);
       this.ctx.fillText(`${f.m}M`, x - 25, y - 22);
     }
   }
@@ -917,10 +929,25 @@ export class EacEditor {
 
     // Draw label
     this.ctx.fillStyle = '#D96C53';
-    this.ctx.font = '10px Inter';
+    this.ctx.font = 'bold 9px Inter';
     const midX = len / 2;
     const midH = (h0 + hL) / 2;
-    this.ctx.fillText(`p(x)`, midX - 10, midH - 6);
+
+    let labelStr = "p";
+    if (el.py) {
+      labelStr = el.py;
+    } else if (el.p0 !== undefined && el.pL !== undefined) {
+      if (el.p0 === el.pL) {
+        labelStr = `${Math.abs(el.p0)}p`;
+      } else {
+        labelStr = `p0=${Math.abs(el.p0)}, pL=${Math.abs(el.pL)}`;
+      }
+    }
+
+    this.ctx.strokeStyle = '#FFFFFF';
+    this.ctx.lineWidth = 3.5;
+    this.ctx.strokeText(labelStr, midX, midH - 10);
+    this.ctx.fillText(labelStr, midX, midH - 10);
 
     this.ctx.restore();
   }
@@ -1065,22 +1092,36 @@ export class EacEditor {
     const p1 = this.getNodePositionAnimated(n1.id);
     const p2 = this.getNodePositionAnimated(n2.id);
 
-    const mx = (p1.x + p2.x) / 2;
-    const my = (p1.y + p2.y) / 2;
-
     const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-
-    this.ctx.save();
-    this.ctx.translate(mx, my);
     
     let textAngle = angle;
     if (textAngle > Math.PI / 2) textAngle -= Math.PI;
     if (textAngle < -Math.PI / 2) textAngle += Math.PI;
+
+    // 1. Draw Dimension Label (at 60% of length, offset above)
+    const mx_dim = p1.x + 0.6 * (p2.x - p1.x);
+    const my_dim = p1.y + 0.6 * (p2.y - p1.y);
+
+    this.ctx.save();
+    this.ctx.translate(mx_dim, my_dim);
     this.ctx.rotate(textAngle);
 
     const label = el.dimLabel || "1L";
+    this.ctx.fillStyle = '#C05B42'; // Accent-strong color
+    this.ctx.font = 'bold 9px Inter';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'bottom';
     
-    // Properties text below the bar
+    this.ctx.strokeStyle = '#FFFFFF';
+    this.ctx.lineWidth = 3.5;
+    this.ctx.strokeText(label, 0, -6);
+    this.ctx.fillText(label, 0, -6);
+    this.ctx.restore();
+
+    // 2. Draw Properties Label (at 40% of length, offset below)
+    const mx_prop = p1.x + 0.4 * (p2.x - p1.x);
+    const my_prop = p1.y + 0.4 * (p2.y - p1.y);
+
     let propStr = "";
     if (el.type === 'spring') {
       propStr = `k=${el.E || 1}`;
@@ -1092,24 +1133,19 @@ export class EacEditor {
       propStr = `E=${el.E || 1}, A=${el.A || 1}, I=${el.I || 1}`;
     }
 
-    // 1. Draw Dimension Label
-    this.ctx.fillStyle = '#C05B42'; // Accent-strong color
-    this.ctx.font = 'bold 9px Inter';
+    this.ctx.save();
+    this.ctx.translate(mx_prop, my_prop);
+    this.ctx.rotate(textAngle);
+
+    this.ctx.fillStyle = '#6E6E6E'; // Muted dark gray
+    this.ctx.font = 'bold 7.5px Inter';
     this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'bottom';
+    this.ctx.textBaseline = 'top';
     
     this.ctx.strokeStyle = '#FFFFFF';
     this.ctx.lineWidth = 3.5;
-    this.ctx.strokeText(label, 0, -5);
-    this.ctx.fillText(label, 0, -5);
-
-    // 2. Draw Properties Label
-    this.ctx.fillStyle = '#6E6E6E'; // Muted dark gray
-    this.ctx.font = '7px Inter';
-    this.ctx.textBaseline = 'top';
-    
-    this.ctx.strokeText(propStr, 0, 5);
-    this.ctx.fillText(propStr, 0, 5);
+    this.ctx.strokeText(propStr, 0, 6);
+    this.ctx.fillText(propStr, 0, 6);
     
     this.ctx.restore();
   }
