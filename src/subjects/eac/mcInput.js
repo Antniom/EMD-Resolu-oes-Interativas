@@ -80,13 +80,13 @@ export class EacMcInput {
     // Header columns based on structure type
     let cols = [];
     if (this.type === 'mola') {
-      cols = ['Elemento', 'Nó i (U1)', 'Nó j (U2)', 'Rigidez k'];
+      cols = ['Elemento', '1', '2', 'Rigidez k'];
     } else if (this.type === 'barra2d') {
-      cols = ['M.E.', 'U1', 'V1', 'U2', 'V2', 'θ1 (°)', 'θ2 (°)', 'Compr. L', 'Rigidez E', 'Área A'];
+      cols = ['M.E.', '1', '2', '3', '4', 'θ1 (°)', 'θ2 (°)', 'Compr. L', 'Rigidez E', 'Área A'];
     } else if (this.type === 'viga') {
-      cols = ['Elemento', 'v1', 'θ1', 'v2', 'θ2', 'Compr. L', 'E', 'Inércia I', 'Área A'];
+      cols = ['Elemento', '1', '2', '3', '4', 'Compr. L', 'E', 'Inércia I', 'Área A'];
     } else if (this.type === 'vigabarra2d') {
-      cols = ['M.E.', 'u1', 'v1', 'θ1', 'u2', 'v2', 'θ2', 'Compr. L', 'E', 'Área A', 'Inércia I', 'Ângulo θ (°)'];
+      cols = ['M.E.', '1', '2', '3', '4', '5', '6', 'Compr. L', 'E', 'Área A', 'Inércia I', 'Ângulo θ (°)'];
     }
 
     const thead = document.createElement('thead');

@@ -593,11 +593,11 @@ export class EacEditor {
 
     // Node label with white outline backing to prevent overlapping
     this.ctx.fillStyle = '#565656';
-    this.ctx.font = 'bold 9px Inter';
+    this.ctx.font = 'bold 18px Inter';
     this.ctx.strokeStyle = '#FFFFFF';
-    this.ctx.lineWidth = 3;
-    this.ctx.strokeText(`N${node.id}`, x + 10, y - 10);
-    this.ctx.fillText(`N${node.id}`, x + 10, y - 10);
+    this.ctx.lineWidth = 4;
+    this.ctx.strokeText(`N${node.id}`, x + 12, y - 12);
+    this.ctx.fillText(`N${node.id}`, x + 12, y - 12);
   }
 
   drawElement(el) {
@@ -794,11 +794,11 @@ export class EacEditor {
       this.ctx.closePath();
       this.ctx.fill();
 
-      this.ctx.font = 'bold 12px Inter';
+      this.ctx.font = 'bold 24px Inter';
       this.ctx.strokeStyle = '#FFFFFF';
-      this.ctx.lineWidth = 4;
-      this.ctx.strokeText(`${f.px > 0 ? '' : '-'}${Math.abs(f.px)}P`, startX - dir * 6, y - 8);
-      this.ctx.fillText(`${f.px > 0 ? '' : '-'}${Math.abs(f.px)}P`, startX - dir * 6, y - 8);
+      this.ctx.lineWidth = 5;
+      this.ctx.strokeText(`${f.px > 0 ? '' : '-'}${Math.abs(f.px)}P`, startX - dir * 8, y - 12);
+      this.ctx.fillText(`${f.px > 0 ? '' : '-'}${Math.abs(f.px)}P`, startX - dir * 8, y - 12);
     }
 
     // Draw vertical force Py
@@ -821,11 +821,11 @@ export class EacEditor {
       this.ctx.closePath();
       this.ctx.fill();
 
-      this.ctx.font = 'bold 12px Inter';
+      this.ctx.font = 'bold 24px Inter';
       this.ctx.strokeStyle = '#FFFFFF';
-      this.ctx.lineWidth = 4;
-      this.ctx.strokeText(`${f.py > 0 ? '' : '-'}${Math.abs(f.py)}P`, x + 10, startY + dir * 4);
-      this.ctx.fillText(`${f.py > 0 ? '' : '-'}${Math.abs(f.py)}P`, x + 10, startY + dir * 4);
+      this.ctx.lineWidth = 5;
+      this.ctx.strokeText(`${f.py > 0 ? '' : '-'}${Math.abs(f.py)}P`, x + 14, startY + dir * 6);
+      this.ctx.fillText(`${f.py > 0 ? '' : '-'}${Math.abs(f.py)}P`, x + 14, startY + dir * 6);
     }
 
     // Draw moment
@@ -850,11 +850,11 @@ export class EacEditor {
       this.ctx.fill();
       this.ctx.restore();
 
-      this.ctx.font = 'bold 12px Inter';
+      this.ctx.font = 'bold 24px Inter';
       this.ctx.strokeStyle = '#FFFFFF';
-      this.ctx.lineWidth = 4;
-      this.ctx.strokeText(`${f.m}M`, x - 25, y - 22);
-      this.ctx.fillText(`${f.m}M`, x - 25, y - 22);
+      this.ctx.lineWidth = 5;
+      this.ctx.strokeText(`${f.m}M`, x - 35, y - 30);
+      this.ctx.fillText(`${f.m}M`, x - 35, y - 30);
     }
   }
 
@@ -929,7 +929,7 @@ export class EacEditor {
 
     // Draw label
     this.ctx.fillStyle = '#D96C53';
-    this.ctx.font = 'bold 9px Inter';
+    this.ctx.font = 'bold 18px Inter';
     const midX = len / 2;
     const midH = (h0 + hL) / 2;
 
@@ -945,9 +945,9 @@ export class EacEditor {
     }
 
     this.ctx.strokeStyle = '#FFFFFF';
-    this.ctx.lineWidth = 3.5;
-    this.ctx.strokeText(labelStr, midX, midH - 10);
-    this.ctx.fillText(labelStr, midX, midH - 10);
+    this.ctx.lineWidth = 4.5;
+    this.ctx.strokeText(labelStr, midX, midH - 14);
+    this.ctx.fillText(labelStr, midX, midH - 14);
 
     this.ctx.restore();
   }
@@ -1028,9 +1028,12 @@ export class EacEditor {
       const ty = pCommon.y + (radius + 15) * Math.sin(midAngle);
       
       this.ctx.fillStyle = '#D96C53';
-      this.ctx.font = 'bold 9px Inter';
+      this.ctx.font = 'bold 18px Inter';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
+      this.ctx.strokeStyle = '#FFFFFF';
+      this.ctx.lineWidth = 4;
+      this.ctx.strokeText(`${dim.value}º`, tx, ty);
       this.ctx.fillText(`${dim.value}º`, tx, ty);
     });
   }
@@ -1108,14 +1111,14 @@ export class EacEditor {
 
     const label = el.dimLabel || "1L";
     this.ctx.fillStyle = '#C05B42'; // Accent-strong color
-    this.ctx.font = 'bold 9px Inter';
+    this.ctx.font = 'bold 20px Inter';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'bottom';
     
     this.ctx.strokeStyle = '#FFFFFF';
-    this.ctx.lineWidth = 3.5;
-    this.ctx.strokeText(label, 0, -6);
-    this.ctx.fillText(label, 0, -6);
+    this.ctx.lineWidth = 4.5;
+    this.ctx.strokeText(label, 0, -10);
+    this.ctx.fillText(label, 0, -10);
     this.ctx.restore();
 
     // 2. Draw Properties Label (at 40% of length, offset below)
@@ -1138,14 +1141,14 @@ export class EacEditor {
     this.ctx.rotate(textAngle);
 
     this.ctx.fillStyle = '#6E6E6E'; // Muted dark gray
-    this.ctx.font = 'bold 7.5px Inter';
+    this.ctx.font = 'bold 15px Inter';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'top';
     
     this.ctx.strokeStyle = '#FFFFFF';
-    this.ctx.lineWidth = 3.5;
-    this.ctx.strokeText(propStr, 0, 6);
-    this.ctx.fillText(propStr, 0, 6);
+    this.ctx.lineWidth = 4.5;
+    this.ctx.strokeText(propStr, 0, 10);
+    this.ctx.fillText(propStr, 0, 10);
     
     this.ctx.restore();
   }
