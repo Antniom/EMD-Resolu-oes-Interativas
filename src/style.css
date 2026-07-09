@@ -60,7 +60,7 @@ body {
 }
 
 .custom-cursor-pointer, a, button, select, input, option, .tab-btn, .tool-btn, .pill, [role="button"] {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%231e1e1e' stroke='%23f3f1e9' stroke-width='1.5' stroke-linejoin='round' d='M10 2a2 2 0 0 0-2 2v9.33l-1.87-.75c-.62-.25-1.33.05-1.58.67-.25.62.05 1.33.67 1.58L12.5 17.7A5 5 0 0 0 17 21h1a4 4 0 0 0 4-4V8a2 2 0 0 0-4 0v2.5L14 10V4a2 2 0 0 0-4 0z'/%3E%3C/svg%3E") 10 2, pointer !important;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 32 32'%3E%3Cpath fill='%231e1e1e' stroke='%23f3f1e9' stroke-width='1.5' stroke-linejoin='round' d='M10 29a6 6 0 0 0 6 6h7a9 9 0 0 0 9-9v-9a3 3 0 0 0-6 0v2h-1v-11a3 3 0 0 0-6 0v11h-1v-9a3 3 0 0 0-6 0v9h-1V4a3 3 0 0 0-6 0v18l-3-4a3 3 0 0 0-4 4l6 7z'/%3E%3C/svg%3E") 7 4, pointer !important;
 }
 
 .custom-cursor-crosshair {
