@@ -14,22 +14,22 @@ let currentSubjectId = 'eac';
 function renderAppShell() {
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-sky-500/30 selection:text-sky-200">
+    <div class="min-h-screen flex flex-col bg-[var(--bg-main)] text-[var(--text-primary)] font-sans selection:bg-[var(--accent-glow)] selection:text-[var(--accent)]">
       <!-- Top navbar header -->
-      <header class="h-16 px-6 border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between">
+      <header class="h-16 px-6 border-b border-[var(--panel-border)] bg-[var(--bg-card)]/90 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-sky-500/20">Σ</div>
-          <span class="font-display font-bold text-lg tracking-tight bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">EMD Resoluções Interativas</span>
+          <div class="w-8 h-8 rounded-lg bg-[var(--text-primary)] flex items-center justify-center font-bold text-white shadow-md">Σ</div>
+          <span class="font-display font-bold text-lg tracking-tight text-[var(--text-primary)]">EMD Resoluções Interativas</span>
         </div>
         <div class="flex items-center gap-4">
           <!-- Subject Selector -->
           <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400 font-medium">Disciplina:</span>
-            <select id="subject-selector" class="bg-slate-900 border border-slate-800 rounded-lg text-xs py-1 px-3 text-slate-200 outline-none focus:border-sky-500 cursor-pointer">
+            <span class="text-xs text-[var(--text-secondary)] font-medium">Disciplina:</span>
+            <select id="subject-selector" class="bg-[var(--bg-card)] border border-[var(--panel-border)] rounded-lg text-xs py-1 px-3 text-[var(--text-primary)] outline-none focus:border-[var(--accent)] cursor-pointer">
               ${SUBJECTS.map(sub => `<option value="${sub.id}">${sub.name}</option>`).join('')}
             </select>
           </div>
-          <button id="help-btn" class="w-8 h-8 rounded-full border border-slate-800 bg-slate-900/60 hover:bg-slate-900 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 text-sm transition-all">?</button>
+          <button id="help-btn" class="w-8 h-8 rounded-full border border-[var(--panel-border)] bg-[var(--bg-card)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] flex items-center justify-center text-[var(--text-secondary)] text-sm transition-all shadow-sm">?</button>
         </div>
       </header>
 
@@ -39,17 +39,17 @@ function renderAppShell() {
       </main>
 
       <!-- Help Modal -->
-      <div id="help-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative">
-          <button id="close-help-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-200 text-xl font-bold">&times;</button>
-          <div id="help-content" class="prose prose-invert max-h-[500px] overflow-y-auto text-slate-300 text-sm space-y-4 pr-2">
+      <div id="help-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-[var(--bg-card)] border border-[var(--panel-border)] rounded-2xl w-full max-w-xl p-6 shadow-2xl relative animate-fade-in">
+          <button id="close-help-btn" class="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xl font-bold">&times;</button>
+          <div id="help-content" class="prose max-h-[500px] overflow-y-auto text-[var(--text-secondary)] text-sm space-y-4 pr-2">
             <!-- Dynamic help text gets rendered here -->
           </div>
         </div>
       </div>
 
       <!-- Footer -->
-      <footer class="h-10 border-t border-slate-900/80 bg-slate-950/40 flex items-center justify-center text-[10px] text-slate-600">
+      <footer class="h-10 border-t border-[var(--panel-border)] bg-[var(--bg-card)]/40 flex items-center justify-center text-[10px] text-[var(--text-tertiary)]">
         &copy; 2026 EMD Resolucoes Interativas. Pair-programmed with Gemini.
       </footer>
     </div>

@@ -49,7 +49,7 @@ export class EacModule extends SubjectTemplate {
 
     // Tab buttons for Workspace (Editor / Table)
     const wsHeader = document.createElement('div');
-    wsHeader.className = 'flex justify-between items-center bg-slate-900/60 p-1.5 rounded-xl border border-slate-800/80';
+    wsHeader.className = 'flex justify-between items-center bg-[var(--bg-main)] p-1.5 rounded-xl border border-[var(--panel-border)]';
 
     const wsTabs = document.createElement('div');
     wsTabs.className = 'flex gap-2';
@@ -70,7 +70,7 @@ export class EacModule extends SubjectTemplate {
 
     // Structural subType selectors
     const subTypeSelect = document.createElement('select');
-    subTypeSelect.className = 'select-input text-sm py-1 px-2.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 outline-none';
+    subTypeSelect.className = 'select-input text-sm py-1 px-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]';
     subTypeSelect.innerHTML = `
       <option value="barra2d">Treliças (Barras 2D)</option>
       <option value="viga">Vigas (Flexão 1D)</option>
@@ -101,7 +101,7 @@ export class EacModule extends SubjectTemplate {
     editorPanel.appendChild(toolbar);
 
     const canvas = document.createElement('canvas');
-    canvas.className = 'flex-1 bg-slate-950/60 block outline-none cursor-crosshair';
+    canvas.className = 'flex-1 bg-[#FAF8F5] block outline-none cursor-crosshair';
     editorPanel.appendChild(canvas);
     wsContent.appendChild(editorPanel);
 
@@ -123,7 +123,7 @@ export class EacModule extends SubjectTemplate {
     optionsCard.className = 'glass-panel rounded-2xl p-4 flex flex-col gap-3';
     
     const optTitle = document.createElement('h3');
-    optTitle.className = 'text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1';
+    optTitle.className = 'text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1';
     optTitle.innerText = 'Resultados a Visualizar';
     optionsCard.appendChild(optTitle);
 
@@ -149,13 +149,13 @@ export class EacModule extends SubjectTemplate {
     resolutionCard.id = 'resolution-card';
     
     const resTitle = document.createElement('h3');
-    resTitle.className = 'text-lg font-bold text-slate-200 border-b border-slate-800 pb-2 flex justify-between items-center';
-    resTitle.innerHTML = '<span>Resolução Passo a Passo</span><span class="text-xs font-normal text-slate-500">M.F.E.</span>';
+    resTitle.className = 'text-lg font-bold text-[var(--text-primary)] border-b border-[var(--panel-border)] pb-2 flex justify-between items-center';
+    resTitle.innerHTML = '<span>Resolução Passo a Passo</span><span class="text-xs font-normal text-[var(--text-tertiary)]">M.F.E.</span>';
     resolutionCard.appendChild(resTitle);
 
     const resOutput = document.createElement('div');
     resOutput.id = 'resolution-output';
-    resOutput.className = 'text-slate-300 space-y-4 text-sm leading-relaxed';
+    resOutput.className = 'text-[var(--text-primary)] space-y-4 text-sm leading-relaxed';
     resolutionCard.appendChild(resOutput);
 
     rightCol.appendChild(resolutionCard);
@@ -254,10 +254,10 @@ export class EacModule extends SubjectTemplate {
       const btn = document.createElement('button');
       btn.className = `btn flex justify-between items-center text-left py-2 px-3 text-sm rounded-lg transition-all border ${
         this.activeOption === opt.id 
-          ? 'bg-sky-500/10 border-sky-500/50 text-sky-400 font-medium' 
-          : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700'
+          ? 'bg-[var(--accent-glow)] border-[var(--accent)] text-[var(--accent-strong)] font-medium' 
+          : 'bg-[var(--bg-card)] border-[var(--panel-border)] text-[var(--text-secondary)] hover:border-[var(--text-primary)]'
       }`;
-      btn.innerHTML = `<span>${opt.label}</span>${this.activeOption === opt.id ? '<span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>' : ''}`;
+      btn.innerHTML = `<span>${opt.label}</span>${this.activeOption === opt.id ? '<span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse"></span>' : ''}`;
       btn.onclick = () => {
         this.activeOption = opt.id;
         this.updateOptionsList();
@@ -279,14 +279,14 @@ export class EacModule extends SubjectTemplate {
     if (optionId === 3 && (this.subType === 'barra2d' || this.subType === 'viga')) {
       const panel = document.createElement('div');
       panel.id = 'sub-options-panel';
-      panel.className = 'mt-2 p-3 bg-slate-950/60 border border-slate-800 rounded-xl flex flex-col gap-2';
+      panel.className = 'mt-2 p-3 bg-[var(--bg-main)] border border-[var(--panel-border)] rounded-xl flex flex-col gap-2';
 
       const barSelect = document.createElement('div');
       barSelect.className = 'flex justify-between items-center';
-      barSelect.innerHTML = `<span class="text-xs text-slate-400">Selecionar elemento:</span>`;
+      barSelect.innerHTML = `<span class="text-xs text-[var(--text-secondary)]">Selecionar elemento:</span>`;
       
       const select = document.createElement('select');
-      select.className = 'select-input text-xs py-0.5 px-2 bg-slate-900 border border-slate-700 text-slate-200 rounded';
+      select.className = 'select-input text-xs py-0.5 px-2 bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] rounded';
       this.elements.forEach((el, index) => {
         if (el.type !== 'spring') {
           select.innerHTML += `<option value="${index+1}">Elemento ${index+1}</option>`;
@@ -302,7 +302,7 @@ export class EacModule extends SubjectTemplate {
 
       const xInput = document.createElement('div');
       xInput.className = 'flex justify-between items-center';
-      xInput.innerHTML = `<span class="text-xs text-slate-400">Coordenada x (coef. de L):</span>`;
+      xInput.innerHTML = `<span class="text-xs text-[var(--text-secondary)]">Coordenada x (coef. de L):</span>`;
       
       const input = document.createElement('input');
       input.type = 'number';
@@ -310,7 +310,7 @@ export class EacModule extends SubjectTemplate {
       input.min = '0';
       input.max = '2';
       input.value = this.activeX;
-      input.className = 'w-16 text-center text-xs py-0.5 bg-slate-900 border border-slate-700 text-slate-200 rounded outline-none';
+      input.className = 'w-16 text-center text-xs py-0.5 bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] rounded outline-none';
       input.onchange = (e) => {
         this.activeX = parseFloat(e.target.value) || 0.5;
         this.solve();
@@ -324,7 +324,7 @@ export class EacModule extends SubjectTemplate {
 
   createEditorToolbar() {
     const toolbar = document.createElement('div');
-    toolbar.className = 'flex flex-wrap gap-1 p-2 bg-slate-900/40 border-b border-slate-800/80 items-center justify-between';
+    toolbar.className = 'flex flex-wrap gap-1 p-2 bg-[var(--bg-main)] border-b border-[var(--panel-border)] items-center justify-between';
 
     const tools = [
       { id: 'select', label: 'Seleção', icon: '⬈' },
@@ -351,7 +351,7 @@ export class EacModule extends SubjectTemplate {
     tools.forEach(t => {
       if (t.id === 'divider') {
         const div = document.createElement('div');
-        div.className = 'w-[1px] h-6 bg-slate-800 mx-1';
+        div.className = 'w-[1px] h-6 bg-[var(--panel-border)] mx-1';
         group.appendChild(div);
         return;
       }
@@ -359,16 +359,16 @@ export class EacModule extends SubjectTemplate {
       const btn = document.createElement('button');
       btn.className = `tool-btn px-2.5 py-1 text-xs rounded transition-all flex items-center gap-1.5 ${
         this.editor && this.editor.tool === t.id 
-          ? 'bg-sky-500/25 border border-sky-500/50 text-sky-300 font-medium' 
-          : 'bg-slate-950/40 border border-slate-900 text-slate-400 hover:border-slate-800'
+          ? 'bg-[var(--accent-glow)] border border-[var(--accent)] text-[var(--accent-strong)] font-medium' 
+          : 'bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-secondary)] hover:border-[var(--text-primary)]'
       }`;
       btn.innerHTML = `<span class="text-sm font-semibold">${t.icon}</span> ${t.label}`;
       btn.onclick = () => {
         this.editor.tool = t.id;
-        group.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('bg-sky-500/25', 'border-sky-500/50', 'text-sky-300', 'font-medium'));
-        group.querySelectorAll('.tool-btn').forEach(b => b.classList.add('bg-slate-950/40', 'border-slate-900', 'text-slate-400'));
-        btn.classList.remove('bg-slate-950/40', 'border-slate-900', 'text-slate-400');
-        btn.classList.add('bg-sky-500/25', 'border-sky-500/50', 'text-sky-300', 'font-medium');
+        group.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('bg-[var(--accent-glow)]', 'border-[var(--accent)]', 'text-[var(--accent-strong)]', 'font-medium'));
+        group.querySelectorAll('.tool-btn').forEach(b => b.classList.add('bg-[var(--bg-card)]', 'border-[var(--panel-border)]', 'text-[var(--text-secondary)]'));
+        btn.classList.remove('bg-[var(--bg-card)]', 'border-[var(--panel-border)]', 'text-[var(--text-secondary)]');
+        btn.classList.add('bg-[var(--accent-glow)]', 'border-[var(--accent)]', 'text-[var(--accent-strong)]', 'font-medium');
       };
       group.appendChild(btn);
     });
@@ -377,12 +377,12 @@ export class EacModule extends SubjectTemplate {
 
     // Inclined Support Rotator Input
     const anglePanel = document.createElement('div');
-    anglePanel.className = 'flex gap-2 items-center text-xs text-slate-400';
+    anglePanel.className = 'flex gap-2 items-center text-xs text-[var(--text-secondary)]';
     anglePanel.innerHTML = `<span>Ângulo Apoio:</span>`;
     const angleInput = document.createElement('input');
     angleInput.type = 'number';
     angleInput.value = 0;
-    angleInput.className = 'w-12 text-center py-0.5 bg-slate-950 border border-slate-800 text-slate-200 rounded';
+    angleInput.className = 'w-12 text-center py-0.5 bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] rounded';
     angleInput.onchange = (e) => {
       const val = parseFloat(e.target.value) || 0;
       if (this.editor) this.editor.selectedSupportAngle = val;
@@ -398,7 +398,7 @@ export class EacModule extends SubjectTemplate {
     card.className = 'glass-panel rounded-2xl p-4 flex flex-col gap-3';
 
     const title = document.createElement('h3');
-    title.className = 'text-sm font-semibold text-slate-400 uppercase tracking-wider mb-1';
+    title.className = 'text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1';
     title.innerText = 'Gravar & Carregar Problemas';
     card.appendChild(title);
 
@@ -408,7 +408,7 @@ export class EacModule extends SubjectTemplate {
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.placeholder = 'Nome do exercício...';
-    nameInput.className = 'flex-1 bg-slate-950/60 border border-slate-800 focus:border-sky-500 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none';
+    nameInput.className = 'flex-1 bg-[var(--bg-card)] border border-[var(--panel-border)] focus:border-[var(--accent)] rounded-lg px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none';
     inputRow.appendChild(nameInput);
 
     const saveBtn = document.createElement('button');
@@ -433,7 +433,7 @@ export class EacModule extends SubjectTemplate {
     loadRow.className = 'flex gap-2';
 
     const select = document.createElement('select');
-    select.className = 'flex-1 bg-slate-950 border border-slate-800 text-slate-300 text-sm py-1.5 px-3 rounded-lg outline-none';
+    select.className = 'flex-1 bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] text-sm py-1.5 px-3 rounded-lg outline-none';
     loadRow.appendChild(select);
 
     const loadBtn = document.createElement('button');

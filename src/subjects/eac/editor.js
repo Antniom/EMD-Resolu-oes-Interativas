@@ -346,7 +346,7 @@ export class EacEditor {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    this.ctx.strokeStyle = 'rgba(224, 222, 200, 0.55)';
     this.ctx.lineWidth = 1;
 
     // Draw vertical grid lines
@@ -368,7 +368,7 @@ export class EacEditor {
     }
 
     // Draw axes
-    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    this.ctx.strokeStyle = 'rgba(197, 194, 165, 0.7)';
     this.ctx.lineWidth = 1.5;
 
     // X Axis
@@ -452,14 +452,14 @@ export class EacEditor {
 
     this.ctx.beginPath();
     this.ctx.arc(x, y, 6, 0, 2 * Math.PI);
-    this.ctx.fillStyle = isSelected ? '#a3e635' : '#1e293b'; // Neon green if selected, dark slate otherwise
-    this.ctx.strokeStyle = isSelected ? '#ffffff' : '#38bdf8'; // Electric blue border
+    this.ctx.fillStyle = isSelected ? '#D96C53' : '#FFFFFF'; // Burnt orange if selected, white otherwise
+    this.ctx.strokeStyle = isSelected ? '#FFFFFF' : '#191919'; // Dark border
     this.ctx.lineWidth = 2.5;
     this.ctx.fill();
     this.ctx.stroke();
 
     // Node label
-    this.ctx.fillStyle = '#94a3b8';
+    this.ctx.fillStyle = '#565656';
     this.ctx.font = '10px Inter';
     this.ctx.fillText(`N${node.id}`, x + 10, y - 8);
   }
@@ -475,7 +475,7 @@ export class EacEditor {
     const isSelected = this.selectedElementId === el.id;
 
     this.ctx.beginPath();
-    this.ctx.strokeStyle = isSelected ? '#a3e635' : (el.type === 'spring' ? '#fbbf24' : '#e2e8f0');
+    this.ctx.strokeStyle = isSelected ? '#D96C53' : (el.type === 'spring' ? '#795240' : '#191919');
 
     if (el.type === 'spring') {
       // Draw spring zig-zag
@@ -496,7 +496,7 @@ export class EacEditor {
       this.ctx.moveTo(p1.x, p1.y);
       this.ctx.lineTo(p2.x, p2.y);
       this.ctx.stroke();
-      this.ctx.strokeStyle = '#0f172a';
+      this.ctx.strokeStyle = '#FFFFFF';
       this.ctx.lineWidth = 1.5;
       this.ctx.stroke();
     }
@@ -540,8 +540,8 @@ export class EacEditor {
     this.ctx.translate(x, y);
     this.ctx.rotate(node.angle * Math.PI / 180);
 
-    this.ctx.strokeStyle = '#38bdf8'; // Electric blue
-    this.ctx.fillStyle = 'rgba(56, 189, 248, 0.1)';
+    this.ctx.strokeStyle = '#191919'; // Textbook dark gray/black
+    this.ctx.fillStyle = 'rgba(25, 25, 25, 0.04)';
     this.ctx.lineWidth = 2;
 
     if (node.support === 'fixed') {
@@ -556,7 +556,7 @@ export class EacEditor {
         this.ctx.moveTo(0, i);
         this.ctx.lineTo(-6, i - 6);
       }
-      this.ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+      this.ctx.strokeStyle = 'rgba(25, 25, 25, 0.4)';
       this.ctx.stroke();
     } else if (node.support === 'pinned') {
       // Pinned triangle support
@@ -634,8 +634,8 @@ export class EacEditor {
 
     // Draw horizontal force Px
     if (f.px && f.px !== 0) {
-      this.ctx.strokeStyle = '#f43f5e'; // Hot pink for force
-      this.ctx.fillStyle = '#f43f5e';
+      this.ctx.strokeStyle = '#D96C53'; // Burnt Orange
+      this.ctx.fillStyle = '#D96C53';
       const dir = f.px > 0 ? 1 : -1;
       const startX = x - dir * 40;
 
@@ -658,8 +658,8 @@ export class EacEditor {
 
     // Draw vertical force Py
     if (f.py && f.py !== 0) {
-      this.ctx.strokeStyle = '#f43f5e';
-      this.ctx.fillStyle = '#f43f5e';
+      this.ctx.strokeStyle = '#D96C53';
+      this.ctx.fillStyle = '#D96C53';
       const dir = f.py > 0 ? 1 : -1; // up is positive, but canvas Y is down
       const startY = y + dir * 40; // reverse direction in canvas coords
 
@@ -682,8 +682,8 @@ export class EacEditor {
 
     // Draw moment
     if (f.m && f.m !== 0) {
-      this.ctx.strokeStyle = '#ec4899'; // Magenta
-      this.ctx.fillStyle = '#ec4899';
+      this.ctx.strokeStyle = '#D96C53';
+      this.ctx.fillStyle = '#D96C53';
       const isCCW = f.m > 0;
 
       this.ctx.beginPath();
@@ -730,7 +730,7 @@ export class EacEditor {
     this.ctx.translate(p1.x, p1.y);
     this.ctx.rotate(angle);
 
-    this.ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)'; // Semi-transparent pink
+    this.ctx.strokeStyle = 'rgba(217, 108, 83, 0.8)'; // Semi-transparent burnt orange
     this.ctx.lineWidth = 1.5;
 
     // Draw distributed profile line
@@ -744,7 +744,7 @@ export class EacEditor {
     this.ctx.stroke();
 
     // Fill polygon
-    this.ctx.fillStyle = 'rgba(244, 63, 94, 0.08)';
+    this.ctx.fillStyle = 'rgba(217, 108, 83, 0.08)';
     this.ctx.beginPath();
     this.ctx.moveTo(0, 0);
     this.ctx.lineTo(0, h0);
@@ -772,12 +772,12 @@ export class EacEditor {
       this.ctx.lineTo(x - 3, dir * 5);
       this.ctx.lineTo(x + 3, dir * 5);
       this.ctx.closePath();
-      this.ctx.fillStyle = 'rgba(244, 63, 94, 0.7)';
+      this.ctx.fillStyle = 'rgba(217, 108, 83, 0.8)';
       this.ctx.fill();
     }
 
     // Draw label
-    this.ctx.fillStyle = '#f43f5e';
+    this.ctx.fillStyle = '#D96C53';
     this.ctx.font = '10px Inter';
     const midX = len / 2;
     const midH = (h0 + hL) / 2;
