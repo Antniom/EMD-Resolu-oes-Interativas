@@ -12,7 +12,7 @@ export class EacEditor {
     this.forces = [];    // { node: id, px: 0, py: 0, m: 0 }
 
     // Editor UI state
-    this.tool = 'select'; // select, node, bar, beam, spring, frame, support_fixed, support_pinned, support_roller, force_point, force_moment, force_dist
+    this._tool = 'select'; // select, node, bar, beam, spring, frame, support_fixed, support_pinned, support_roller, force_point, force_moment, force_dist
     this.selectedNodeId = null;
     this.selectedElementId = null;
     this.draggedNodeId = null;
@@ -41,6 +41,26 @@ export class EacEditor {
 
     this.initEvents();
     this.resizeCanvas();
+    this.updateCanvasCursor();
+  }
+
+  get tool() {
+    return this._tool || 'select';
+  }
+
+  set tool(val) {
+    this._tool = val;
+    this.updateCanvasCursor();
+  }
+
+  updateCanvasCursor() {
+    if (!this.canvas) return;
+    this.canvas.className = 'flex-1 bg-[#FAF8F5] block outline-none';
+    if (this.tool === 'select') {
+      this.canvas.classList.add('custom-cursor-default');
+    } else {
+      this.canvas.classList.add('custom-cursor-crosshair');
+    }
   }
 
   // Set up model data from external source

@@ -52,11 +52,19 @@ body {
     color: var(--text-primary);
     background: var(--bg-main);
     line-height: 1.6;
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%231e1e1e' stroke='%23f3f1e9' stroke-width='1.5' stroke-linejoin='round' d='M4.5 3v15.27l3.96-3.79 2.92 6.55 2.7-1.2-2.9-6.51h5.82L4.5 3z'/%3E%3C/svg%3E") 4 3, auto;
 }
 
-a, button, select, input, option, .tab-btn, .tool-btn, .pill, [role="button"], canvas {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%231e1e1e' stroke='%23f3f1e9' stroke-width='1.5' stroke-linejoin='round' d='M10 2a2 2 0 0 0-2 2v9.33l-1.87-.75c-.62-.25-1.33.05-1.58.67-.25.62.05 1.33.67 1.58L12.5 17.7A5 5 0 0 0 17 21h1a4 4 0 0 0 4-4V8a2 2 0 0 0-4 0v2.5L14 10V4a2 2 0 0 0-4 0z'/%3E%3C/svg%3E") 10 2, pointer;
+/* Custom Cursor Classes with !important to enforce overrides */
+.custom-cursor-default, body {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%231e1e1e' stroke='%23f3f1e9' stroke-width='1.5' stroke-linejoin='round' d='M4.5 3v15.27l3.96-3.79 2.92 6.55 2.7-1.2-2.9-6.51h5.82L4.5 3z'/%3E%3C/svg%3E") 4 3, auto !important;
+}
+
+.custom-cursor-pointer, a, button, select, input, option, .tab-btn, .tool-btn, .pill, [role="button"] {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%231e1e1e' stroke='%23f3f1e9' stroke-width='1.5' stroke-linejoin='round' d='M10 2a2 2 0 0 0-2 2v9.33l-1.87-.75c-.62-.25-1.33.05-1.58.67-.25.62.05 1.33.67 1.58L12.5 17.7A5 5 0 0 0 17 21h1a4 4 0 0 0 4-4V8a2 2 0 0 0-4 0v2.5L14 10V4a2 2 0 0 0-4 0z'/%3E%3C/svg%3E") 10 2, pointer !important;
+}
+
+.custom-cursor-crosshair {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%231e1e1e' stroke-width='2' d='M12 2v20M2 12h20'/%3E%3Ccircle cx='12' cy='12' r='4' fill='none' stroke='%23f3f1e9' stroke-width='1.5'/%3E%3C/svg%3E") 12 12, crosshair !important;
 }
 
 h1, h2, h3, h4 {
