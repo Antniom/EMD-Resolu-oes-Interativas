@@ -363,6 +363,12 @@ export class EacModule extends SubjectTemplate {
       ];
     }
 
+    // Ensure activeOption is valid for the current subtype options
+    const isValidOption = options.some(opt => opt.id === this.activeOption);
+    if (!isValidOption) {
+      this.activeOption = 1;
+    }
+
     list.innerHTML = '';
     options.forEach(opt => {
       const btn = document.createElement('button');
@@ -768,6 +774,7 @@ export class EacModule extends SubjectTemplate {
       forces: this.buildForcesVector(totalDof),
       activeOption: this.activeOption,
       activeBar: this.activeBar,
+      activeElem: this.activeBar,
       activeX: this.activeX
     };
 
@@ -1221,7 +1228,7 @@ export class EacModule extends SubjectTemplate {
       dimInput.type = 'text';
       dimInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
       dimInput.value = el.dimLabel || '1L';
-      dimInput.oninput = (e) => {
+      dimInput.onchange = (e) => {
         el.dimLabel = e.target.value;
         if (this.editor) this.editor.draw();
       };
@@ -1237,7 +1244,7 @@ export class EacModule extends SubjectTemplate {
       eInput.step = 'any';
       eInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
       eInput.value = el.E !== undefined ? el.E : 1;
-      eInput.oninput = (e) => {
+      eInput.onchange = (e) => {
         el.E = parseFloat(e.target.value) || 1;
         this.solveSilently();
         if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
@@ -1255,7 +1262,7 @@ export class EacModule extends SubjectTemplate {
         aInput.step = 'any';
         aInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
         aInput.value = el.A !== undefined ? el.A : 1;
-        aInput.oninput = (e) => {
+        aInput.onchange = (e) => {
           el.A = parseFloat(e.target.value) || 1;
           this.solveSilently();
           if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
@@ -1274,7 +1281,7 @@ export class EacModule extends SubjectTemplate {
         iInput.step = 'any';
         iInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
         iInput.value = el.I !== undefined ? el.I : 1;
-        iInput.oninput = (e) => {
+        iInput.onchange = (e) => {
           el.I = parseFloat(e.target.value) || 1;
           this.solveSilently();
           if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
@@ -1297,7 +1304,7 @@ export class EacModule extends SubjectTemplate {
         p0Input.step = 'any';
         p0Input.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
         p0Input.value = el.p0 !== undefined ? el.p0 : 0;
-        p0Input.oninput = (e) => {
+        p0Input.onchange = (e) => {
           el.p0 = parseFloat(e.target.value) || 0;
           this.solveSilently();
           if (this.editor) this.editor.draw();
@@ -1314,7 +1321,7 @@ export class EacModule extends SubjectTemplate {
         pLInput.step = 'any';
         pLInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
         pLInput.value = el.pL !== undefined ? el.pL : 0;
-        pLInput.oninput = (e) => {
+        pLInput.onchange = (e) => {
           el.pL = parseFloat(e.target.value) || 0;
           this.solveSilently();
           if (this.editor) this.editor.draw();
@@ -1330,7 +1337,7 @@ export class EacModule extends SubjectTemplate {
         pyInput.type = 'text';
         pyInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
         pyInput.value = el.py || '';
-        pyInput.oninput = (e) => {
+        pyInput.onchange = (e) => {
           el.py = e.target.value;
           this.solveSilently();
           if (this.editor) this.editor.draw();
@@ -1390,7 +1397,7 @@ export class EacModule extends SubjectTemplate {
       angInput.type = 'number';
       angInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
       angInput.value = node.angle || 0;
-      angInput.oninput = (e) => {
+      angInput.onchange = (e) => {
         node.angle = parseFloat(e.target.value) || 0;
         this.solveSilently();
         if (this.editor) this.editor.draw();
@@ -1412,7 +1419,7 @@ export class EacModule extends SubjectTemplate {
       fxInput.type = 'number';
       fxInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
       fxInput.value = force.px || 0;
-      fxInput.oninput = (e) => {
+      fxInput.onchange = (e) => {
         force.px = parseFloat(e.target.value) || 0;
         if (!this.forces.find(f => f.node === id)) this.forces.push(force);
         this.solveSilently();
@@ -1428,7 +1435,7 @@ export class EacModule extends SubjectTemplate {
       fyInput.type = 'number';
       fyInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
       fyInput.value = force.py || 0;
-      fyInput.oninput = (e) => {
+      fyInput.onchange = (e) => {
         force.py = parseFloat(e.target.value) || 0;
         if (!this.forces.find(f => f.node === id)) this.forces.push(force);
         this.solveSilently();
@@ -1445,7 +1452,7 @@ export class EacModule extends SubjectTemplate {
         mInput.type = 'number';
         mInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
         mInput.value = force.m || 0;
-        mInput.oninput = (e) => {
+        mInput.onchange = (e) => {
           force.m = parseFloat(e.target.value) || 0;
           if (!this.forces.find(f => f.node === id)) this.forces.push(force);
           this.solveSilently();

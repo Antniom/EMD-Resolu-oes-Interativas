@@ -219,10 +219,15 @@ export class EacEditor {
           this.triggerChange();
         }
       } else if (['bar', 'beam', 'spring', 'frame'].includes(this.tool)) {
-        if (hitNode) {
-          this.isDrawing = true;
-          this.drawStartNodeId = hitNode;
+        let startNodeId = hitNode;
+        if (!startNodeId) {
+          const newId = this.nodes.length > 0 ? Math.max(...this.nodes.map(n => n.id)) + 1 : 1;
+          this.nodes.push({ id: newId, x, y, support: 'none', angle: 0 });
+          startNodeId = newId;
+          this.triggerChange();
         }
+        this.isDrawing = true;
+        this.drawStartNodeId = startNodeId;
       } else if (this.tool.startsWith('support_')) {
         if (hitNode) {
           const type = this.tool.substring('support_'.length);
@@ -333,7 +338,15 @@ export class EacEditor {
       const rect = this.canvas.getBoundingClientRect();
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;
-      const hitNode = this.getNodeAt(cx, cy);
+      const { x, y } = this.canvasToModel(cx, cy);
+      let hitNode = this.getNodeAt(cx, cy);
+
+      if (!hitNode) {
+        const newId = this.nodes.length > 0 ? Math.max(...this.nodes.map(n => n.id)) + 1 : 1;
+        this.nodes.push({ id: newId, x, y, support: 'none', angle: 0 });
+        hitNode = newId;
+        this.triggerChange();
+      }
 
       if (hitNode && hitNode !== this.drawStartNodeId) {
         // Prevent duplicate elements
@@ -352,6 +365,7 @@ export class EacEditor {
             E: 1, A: 1, I: 1, L: 0, p0: 0, pL: 0, py: ''
           });
           this.selectedElementId = newId;
+          this.triggerSelectionChange();
           this.triggerChange();
         }
       }

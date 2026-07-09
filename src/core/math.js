@@ -71,6 +71,19 @@ export class Expr {
     return res;
   }
 
+  addInplace(coef, baseName) {
+    if (baseName === null || baseName === undefined) {
+      this.const += coef;
+    } else {
+      if (Math.abs(coef) > 1e-9) {
+        this.terms[baseName] = (this.terms[baseName] || 0) + coef;
+        if (Math.abs(this.terms[baseName]) < 1e-9) {
+          delete this.terms[baseName];
+        }
+      }
+    }
+  }
+
   getSingleBase() {
     if (Math.abs(this.const) > 1e-9) return null;
     let base = null;
