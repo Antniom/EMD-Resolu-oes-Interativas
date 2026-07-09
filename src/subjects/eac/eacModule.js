@@ -810,33 +810,40 @@ export class EacModule extends SubjectTemplate {
 
     // Render step-by-step stiffness matrix assembly
     const kSection = document.createElement('div');
-    kSection.className = 'p-4 bg-[var(--bg-main)] border border-[var(--panel-border)] rounded-xl space-y-2';
-    kSection.innerHTML = '<h4 class="font-semibold text-[var(--text-primary)] mb-2">1. Matriz de Rigidez do Sistema</h4>';
-    const kOutput = document.createElement('div');
-    kOutput.className = 'space-y-1 font-mono text-[11px] text-[var(--text-primary)]';
-    this.solvedResult.steps.slice(0, 15).forEach(line => {
-      const lineDiv = document.createElement('div');
-      lineDiv.className = 'my-1 overflow-x-auto';
-      if (line.startsWith('$$') && line.endsWith('$$')) {
+    kSection.className = 'space-y-3';
+    kSection.innerHTML = '<h3 class="text-base font-bold text-[var(--text-primary)] mt-6 mb-2 border-b border-[var(--panel-border)] pb-2 flex justify-between items-center"><span>1. Matriz de Rigidez do Sistema</span><span class="text-xs font-normal text-[var(--text-tertiary)]">Montagem do K Global</span></h3>';
+    
+    this.solvedResult.steps.forEach(line => {
+      if (line.startsWith('**') && line.endsWith('**')) {
+        const p = document.createElement('p');
+        p.className = 'text-xs font-semibold text-[var(--text-secondary)] mt-3 mb-1';
+        p.innerText = line.replace(/\*\*/g, '');
+        kSection.appendChild(p);
+      } else if (line.startsWith('$$') && line.endsWith('$$')) {
         const math = line.slice(2, -2).trim();
+        const div = document.createElement('div');
+        div.className = 'my-2 overflow-x-auto text-center py-1 text-sm text-[var(--text-primary)]';
         if (window.katex) {
           try {
-            lineDiv.innerHTML = window.katex.renderToString(math, { displayMode: false, throwOnError: false });
+            div.innerHTML = window.katex.renderToString(math, { displayMode: true, throwOnError: false });
           } catch(e) {
-            lineDiv.innerText = line;
+            div.innerText = line;
           }
         } else {
-          lineDiv.innerText = line;
+          div.innerText = line;
         }
+        kSection.appendChild(div);
+      } else if (line === '---') {
+        const hr = document.createElement('hr');
+        hr.className = 'border-t border-[var(--panel-border)]/30 my-3';
+        kSection.appendChild(hr);
       } else {
-        renderLaTeXText(line, lineDiv);
+        const p = document.createElement('p');
+        p.className = 'text-xs text-[var(--text-secondary)] leading-relaxed';
+        renderLaTeXText(line, p);
+        kSection.appendChild(p);
       }
-      kOutput.appendChild(lineDiv);
     });
-    if (this.solvedResult.steps.length > 15) {
-      kOutput.innerHTML += `<div class="text-[var(--text-tertiary)] italic mt-1">+ ${this.solvedResult.steps.length - 15} termos de rigidez assemblados...</div>`;
-    }
-    kSection.appendChild(kOutput);
     output.appendChild(kSection);
 
     // Render active option steps (LaTeX equations)

@@ -131,6 +131,7 @@ export class EacEditor {
     this.canvas.addEventListener('mousedown', (e) => this.onMouseDown(e));
     this.canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
     this.canvas.addEventListener('mouseup', (e) => this.onMouseUp(e));
+    this.canvas.addEventListener('dblclick', (e) => this.onDoubleClick(e));
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
@@ -1058,6 +1059,20 @@ export class EacEditor {
     this.ctx.rotate(textAngle);
 
     const label = el.dimLabel || "1L";
+    
+    // Properties text below the bar
+    let propStr = "";
+    if (el.type === 'spring') {
+      propStr = `k=${el.E || 1}`;
+    } else if (el.type === 'bar') {
+      propStr = `E=${el.E || 1}, A=${el.A || 1}`;
+    } else if (el.type === 'beam') {
+      propStr = `E=${el.E || 1}, I=${el.I || 1}`;
+    } else if (el.type === 'frame') {
+      propStr = `E=${el.E || 1}, A=${el.A || 1}, I=${el.I || 1}`;
+    }
+
+    // 1. Draw Dimension Label
     this.ctx.fillStyle = '#C05B42'; // Accent-strong color
     this.ctx.font = 'bold 9px Inter';
     this.ctx.textAlign = 'center';
@@ -1066,8 +1081,94 @@ export class EacEditor {
     this.ctx.strokeStyle = '#FFFFFF';
     this.ctx.lineWidth = 3.5;
     this.ctx.strokeText(label, 0, -5);
-    
     this.ctx.fillText(label, 0, -5);
+
+    // 2. Draw Properties Label
+    this.ctx.fillStyle = '#6E6E6E'; // Muted dark gray
+    this.ctx.font = '7px Inter';
+    this.ctx.textBaseline = 'top';
+    
+    this.ctx.strokeText(propStr, 0, 5);
+    this.ctx.fillText(propStr, 0, 5);
+    
     this.ctx.restore();
+  }
+
+  onDoubleClick(e) {
+    const rect = this.canvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+
+    const hitElId = this.getElementAt(cx, cy);
+    if (hitElId) {
+      const el = this.elements.find(e => e.id === hitElId);
+      if (el) {
+        let defaultPrompt = `L=${el.dimLabel || '1L'}, E=${el.E || 1}`;
+        if (el.type !== 'spring') defaultPrompt += `, A=${el.A || 1}`;
+        if (el.type === 'beam' || el.type === 'frame') defaultPrompt += `, I=${el.I || 1}`;
+        
+        const input = prompt("Editar Propriedades do Elemento (Ex: L=1L, E=1, A=1, I=1):", defaultPrompt);
+        if (input !== null) {
+          this.parseElementPropertiesInline(el, input);
+        }
+      }
+    } else {
+      const hitNodeId = this.getNodeAt(cx, cy);
+      if (hitNodeId) {
+        const node = this.nodes.find(n => n.id === hitNodeId);
+        if (node) {
+          const input = prompt("Editar Propriedades do Nó (Ex: Apoio=fixed, Angulo=30):", `Apoio=${node.support || 'none'}, Angulo=${node.angle || 0}`);
+          if (input !== null) {
+            this.parseNodePropertiesInline(node, input);
+          }
+        }
+      }
+    }
+  }
+
+  parseElementPropertiesInline(el, input) {
+    const parts = input.split(',').map(s => s.trim());
+    parts.forEach(part => {
+      const eqIdx = part.indexOf('=');
+      if (eqIdx !== -1) {
+        const key = part.substring(0, eqIdx).trim().toLowerCase();
+        const val = part.substring(eqIdx + 1).trim();
+        if (key && val) {
+          if (key === 'l') {
+            el.dimLabel = val;
+          } else if (key === 'e') {
+            el.E = parseFloat(val) || 1;
+          } else if (key === 'a') {
+            el.A = parseFloat(val) || 1;
+          } else if (key === 'i') {
+            el.I = parseFloat(val) || 1;
+          }
+        }
+      }
+    });
+    this.triggerChange();
+    this.triggerSelectionChange();
+    this.draw();
+  }
+
+  parseNodePropertiesInline(node, input) {
+    const parts = input.split(',').map(s => s.trim());
+    parts.forEach(part => {
+      const eqIdx = part.indexOf('=');
+      if (eqIdx !== -1) {
+        const key = part.substring(0, eqIdx).trim().toLowerCase();
+        const val = part.substring(eqIdx + 1).trim();
+        if (key && val) {
+          if (key === 'apoio') {
+            node.support = val;
+          } else if (key === 'angulo' || key === 'ângulo') {
+            node.angle = parseFloat(val) || 0;
+          }
+        }
+      }
+    });
+    this.triggerChange();
+    this.triggerSelectionChange();
+    this.draw();
   }
 }
