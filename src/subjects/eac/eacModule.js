@@ -221,6 +221,12 @@ export class EacModule extends SubjectTemplate {
     layout.appendChild(contentArea);
     this.container.appendChild(layout);
 
+    // Properties Overlay Panel (Floating inside canvas panel)
+    const propOverlay = document.createElement('div');
+    propOverlay.id = 'properties-overlay';
+    propOverlay.className = 'absolute top-16 right-4 z-10 w-72 bg-[var(--bg-card)]/90 backdrop-blur-md border border-[var(--panel-border)] p-4 rounded-xl shadow-lg transition-all duration-200 hidden flex-col gap-3 text-xs text-[var(--text-primary)]';
+    editorPanel.appendChild(propOverlay);
+
     // Initialize Canvas Editor instance
     this.editor = new EacEditor(canvas, (nodes, elements, forces) => {
       this.nodes = nodes;
@@ -231,6 +237,9 @@ export class EacModule extends SubjectTemplate {
       }
       this.solveSilently();
     });
+    this.editor.onSelect = (type, id) => {
+      this.updatePropertiesOverlay(type, id);
+    };
     this.editor.setModel(this.nodes, this.elements, this.forces);
 
     // Initialize m.c. input helper
@@ -1168,6 +1177,227 @@ export class EacModule extends SubjectTemplate {
     }
 
     this.solve();
+  }
+
+  updatePropertiesOverlay(type, id) {
+    const overlay = this.container.querySelector('#properties-overlay');
+    if (!overlay) return;
+
+    if (!type || !id) {
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+      return;
+    }
+
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+    overlay.innerHTML = '';
+
+    if (type === 'element') {
+      const el = this.elements.find(e => e.id === id);
+      if (!el) {
+        overlay.classList.add('hidden');
+        return;
+      }
+
+      const header = document.createElement('div');
+      header.className = 'font-bold text-[var(--text-primary)] border-b border-[var(--panel-border)] pb-1 mb-1 text-sm flex justify-between items-center';
+      header.innerHTML = `<span>Elemento (${el.id}) - ${el.type.toUpperCase()}</span><button class="hover:text-[var(--accent)] font-bold text-sm" id="close-prop-btn">✕</button>`;
+      overlay.appendChild(header);
+
+      header.querySelector('#close-prop-btn').onclick = () => {
+        if (this.editor) {
+          this.editor.selectedElementId = null;
+          this.editor.triggerSelectionChange();
+          this.editor.draw();
+        }
+      };
+
+      // 1. Dimension Label (L, 2L, etc.)
+      const dimGroup = document.createElement('div');
+      dimGroup.className = 'flex flex-col gap-1';
+      dimGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Dimensão do Comprimento (ex: 1L, 2L):</label>`;
+      const dimInput = document.createElement('input');
+      dimInput.type = 'text';
+      dimInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+      dimInput.value = el.dimLabel || '1L';
+      dimInput.oninput = (e) => {
+        el.dimLabel = e.target.value;
+        if (this.editor) this.editor.draw();
+      };
+      dimGroup.appendChild(dimInput);
+      overlay.appendChild(dimGroup);
+
+      // 2. Elastic Modulus E
+      const eGroup = document.createElement('div');
+      eGroup.className = 'flex flex-col gap-1';
+      eGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Módulo de Elasticidade E:</label>`;
+      const eInput = document.createElement('input');
+      eInput.type = 'number';
+      eInput.step = 'any';
+      eInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+      eInput.value = el.E !== undefined ? el.E : 1;
+      eInput.oninput = (e) => {
+        el.E = parseFloat(e.target.value) || 1;
+        this.solveSilently();
+        if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
+      };
+      eGroup.appendChild(eInput);
+      overlay.appendChild(eGroup);
+
+      // 3. Area A
+      if (el.type !== 'spring') {
+        const aGroup = document.createElement('div');
+        aGroup.className = 'flex flex-col gap-1';
+        aGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Área da Secção A:</label>`;
+        const aInput = document.createElement('input');
+        aInput.type = 'number';
+        aInput.step = 'any';
+        aInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+        aInput.value = el.A !== undefined ? el.A : 1;
+        aInput.oninput = (e) => {
+          el.A = parseFloat(e.target.value) || 1;
+          this.solveSilently();
+          if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
+        };
+        aGroup.appendChild(aInput);
+        overlay.appendChild(aGroup);
+      }
+
+      // 4. Inertia I
+      if (el.type === 'beam' || el.type === 'frame') {
+        const iGroup = document.createElement('div');
+        iGroup.className = 'flex flex-col gap-1';
+        iGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Momento de Inércia I:</label>`;
+        const iInput = document.createElement('input');
+        iInput.type = 'number';
+        iInput.step = 'any';
+        iInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+        iInput.value = el.I !== undefined ? el.I : 1;
+        iInput.oninput = (e) => {
+          el.I = parseFloat(e.target.value) || 1;
+          this.solveSilently();
+          if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
+        };
+        iGroup.appendChild(iInput);
+        overlay.appendChild(iGroup);
+      }
+    } else if (type === 'node') {
+      const node = this.nodes.find(n => n.id === id);
+      if (!node) {
+        overlay.classList.add('hidden');
+        return;
+      }
+
+      const header = document.createElement('div');
+      header.className = 'font-bold text-[var(--text-primary)] border-b border-[var(--panel-border)] pb-1 mb-1 text-sm flex justify-between items-center';
+      header.innerHTML = `<span>Nó (${node.id})</span><button class="hover:text-[var(--accent)] font-bold text-sm" id="close-prop-btn">✕</button>`;
+      overlay.appendChild(header);
+
+      header.querySelector('#close-prop-btn').onclick = () => {
+        if (this.editor) {
+          this.editor.selectedNodeId = null;
+          this.editor.triggerSelectionChange();
+          this.editor.draw();
+        }
+      };
+
+      // 1. Support Type Select
+      const supGroup = document.createElement('div');
+      supGroup.className = 'flex flex-col gap-1';
+      supGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Tipo de Apoio:</label>`;
+      const supSelect = document.createElement('select');
+      supSelect.className = 'select-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs text-[var(--text-primary)]';
+      supSelect.innerHTML = `
+        <option value="none">Nenhum</option>
+        <option value="fixed">Encastrado (Fixed)</option>
+        <option value="pinned">Apoio Fixo (Pinned)</option>
+        <option value="rollerX">Apoio Móvel X</option>
+        <option value="rollerY">Apoio Móvel Y</option>
+      `;
+      supSelect.value = node.support || 'none';
+      supSelect.onchange = (e) => {
+        node.support = e.target.value;
+        this.solveSilently();
+        if (this.editor) this.editor.draw();
+        if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
+      };
+      supGroup.appendChild(supSelect);
+      overlay.appendChild(supGroup);
+
+      // 2. Support Angle
+      const angGroup = document.createElement('div');
+      angGroup.className = 'flex flex-col gap-1';
+      angGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Ângulo do Apoio (º):</label>`;
+      const angInput = document.createElement('input');
+      angInput.type = 'number';
+      angInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+      angInput.value = node.angle || 0;
+      angInput.oninput = (e) => {
+        node.angle = parseFloat(e.target.value) || 0;
+        this.solveSilently();
+        if (this.editor) this.editor.draw();
+        if (this.mcInput) this.mcInput.setModel(this.subType, this.nodes, this.elements, this.forces);
+      };
+      angGroup.appendChild(angInput);
+      overlay.appendChild(angGroup);
+
+      // 3. Node Forces
+      let force = this.forces.find(f => f.node === id);
+      if (!force) {
+        force = { node: id, px: 0, py: 0, m: 0 };
+      }
+
+      const fxGroup = document.createElement('div');
+      fxGroup.className = 'flex flex-col gap-1';
+      fxGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Força Horizontal Px:</label>`;
+      const fxInput = document.createElement('input');
+      fxInput.type = 'number';
+      fxInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+      fxInput.value = force.px || 0;
+      fxInput.oninput = (e) => {
+        force.px = parseFloat(e.target.value) || 0;
+        if (!this.forces.find(f => f.node === id)) this.forces.push(force);
+        this.solveSilently();
+        if (this.editor) this.editor.draw();
+      };
+      fxGroup.appendChild(fxInput);
+      overlay.appendChild(fxGroup);
+
+      const fyGroup = document.createElement('div');
+      fyGroup.className = 'flex flex-col gap-1';
+      fyGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Força Vertical Py:</label>`;
+      const fyInput = document.createElement('input');
+      fyInput.type = 'number';
+      fyInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+      fyInput.value = force.py || 0;
+      fyInput.oninput = (e) => {
+        force.py = parseFloat(e.target.value) || 0;
+        if (!this.forces.find(f => f.node === id)) this.forces.push(force);
+        this.solveSilently();
+        if (this.editor) this.editor.draw();
+      };
+      fyGroup.appendChild(fyInput);
+      overlay.appendChild(fyGroup);
+
+      if (this.subType === 'viga' || this.subType === 'vigabarra2d') {
+        const mGroup = document.createElement('div');
+        mGroup.className = 'flex flex-col gap-1';
+        mGroup.innerHTML = `<label class="font-semibold text-[var(--text-secondary)]">Momento M:</label>`;
+        const mInput = document.createElement('input');
+        mInput.type = 'number';
+        mInput.className = 'text-input py-1 px-2 rounded border border-[var(--panel-border)] bg-[var(--bg-main)] outline-none text-xs';
+        mInput.value = force.m || 0;
+        mInput.oninput = (e) => {
+          force.m = parseFloat(e.target.value) || 0;
+          if (!this.forces.find(f => f.node === id)) this.forces.push(force);
+          this.solveSilently();
+          if (this.editor) this.editor.draw();
+        };
+        mGroup.appendChild(mInput);
+        overlay.appendChild(mGroup);
+      }
+    }
   }
 
   getHelpText() {

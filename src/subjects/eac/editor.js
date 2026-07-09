@@ -37,6 +37,7 @@ export class EacEditor {
     this.animationFrameId = null;
     this.angleDimensions = [];
     this.selectedAngleBars = [];
+    this.onSelect = null;
 
     this.initEvents();
     this.resizeCanvas();
@@ -49,6 +50,7 @@ export class EacEditor {
     this.forces = forces || [];
     this.selectedNodeId = null;
     this.selectedElementId = null;
+    this.triggerSelectionChange();
     this.fitToModel();
   }
 
@@ -104,7 +106,7 @@ export class EacEditor {
     const modelH = maxY - minY;
     
     // Compute best scale factor
-    const padding = 100; // pixels of padding around structure
+    const padding = 140; // pixels of padding around structure
     const drawW = this.canvas.width - 2 * padding;
     const drawH = this.canvas.height - 2 * padding;
     
@@ -208,6 +210,7 @@ export class EacEditor {
             this.selectedElementId = null;
           }
         }
+        this.triggerSelectionChange();
       } else if (this.tool === 'node') {
         if (!hitNode) {
           const newId = this.nodes.length > 0 ? Math.max(...this.nodes.map(n => n.id)) + 1 : 1;
@@ -363,13 +366,19 @@ export class EacEditor {
     this.nodes = this.nodes.filter(n => n.id !== id);
     this.elements = this.elements.filter(el => el.n1 !== id && el.n2 !== id);
     this.forces = this.forces.filter(f => f.node !== id);
-    if (this.selectedNodeId === id) this.selectedNodeId = null;
+    if (this.selectedNodeId === id) {
+      this.selectedNodeId = null;
+      this.triggerSelectionChange();
+    }
     this.triggerChange();
   }
 
   deleteElement(id) {
     this.elements = this.elements.filter(el => el.id !== id);
-    if (this.selectedElementId === id) this.selectedElementId = null;
+    if (this.selectedElementId === id) {
+      this.selectedElementId = null;
+      this.triggerSelectionChange();
+    }
     this.triggerChange();
   }
 
@@ -426,6 +435,9 @@ export class EacEditor {
 
     // Draw angle dimensions
     this.drawAngleDimensions();
+
+    // Draw element dimensions
+    this.elements.forEach(el => this.drawElementDimension(el));
   }
 
   drawGrid() {
@@ -996,5 +1008,52 @@ export class EacEditor {
 
     this.triggerChange();
     this.draw();
+  }
+
+  triggerSelectionChange() {
+    if (this.onSelect) {
+      if (this.selectedNodeId) {
+        this.onSelect('node', this.selectedNodeId);
+      } else if (this.selectedElementId) {
+        this.onSelect('element', this.selectedElementId);
+      } else {
+        this.onSelect(null, null);
+      }
+    }
+  }
+
+  drawElementDimension(el) {
+    const n1 = this.nodes.find(n => n.id === el.n1);
+    const n2 = this.nodes.find(n => n.id === el.n2);
+    if (!n1 || !n2) return;
+
+    const p1 = this.getNodePositionAnimated(n1.id);
+    const p2 = this.getNodePositionAnimated(n2.id);
+
+    const mx = (p1.x + p2.x) / 2;
+    const my = (p1.y + p2.y) / 2;
+
+    const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+    this.ctx.save();
+    this.ctx.translate(mx, my);
+    
+    let textAngle = angle;
+    if (textAngle > Math.PI / 2) textAngle -= Math.PI;
+    if (textAngle < -Math.PI / 2) textAngle += Math.PI;
+    this.ctx.rotate(textAngle);
+
+    const label = el.dimLabel || "1L";
+    this.ctx.fillStyle = '#C05B42'; // Accent-strong color
+    this.ctx.font = 'bold 9px Inter';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'bottom';
+    
+    this.ctx.strokeStyle = '#FFFFFF';
+    this.ctx.lineWidth = 3.5;
+    this.ctx.strokeText(label, 0, -5);
+    
+    this.ctx.fillText(label, 0, -5);
+    this.ctx.restore();
   }
 }
