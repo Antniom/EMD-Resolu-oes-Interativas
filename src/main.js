@@ -108,7 +108,5 @@ function switchSubject(subjectId) {
 }
 
 // Boot the application
-document.addEventListener('DOMContentLoaded', () => {
-  renderAppShell();
-  switchSubject(currentSubjectId);
-});
+renderAppShell();
+switchSubject(currentSubjectId);
