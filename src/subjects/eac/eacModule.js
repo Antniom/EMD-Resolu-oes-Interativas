@@ -446,7 +446,9 @@ export class EacModule extends SubjectTemplate {
       { id: 'divider' },
       { id: 'force_point', label: 'Força P', icon: '↓' },
       { id: 'force_moment', label: 'Momento M', icon: '↻' },
-      { id: 'force_dist', label: 'Distribuída p', icon: '⬇⬇' }
+      { id: 'force_dist', label: 'Distribuída p', icon: '⬇⬇' },
+      { id: 'divider' },
+      { id: 'angle', label: 'Ângulo ∡', icon: '∡' }
     ];
 
     const group = document.createElement('div');
@@ -901,7 +903,8 @@ export class EacModule extends SubjectTemplate {
         E: el.E, A: el.A, I: el.I, L: el.L, theta: el.theta,
         p0: el.p0, pL: el.pL, py: el.py
       })),
-      forces: this.forces
+      forces: this.forces,
+      angleDimensions: this.editor ? this.editor.angleDimensions : []
     };
   }
 
@@ -918,11 +921,18 @@ export class EacModule extends SubjectTemplate {
     if (subTypeSelect) subTypeSelect.value = this.subType;
 
     this.renderWorkspace();
+    
+    if (this.editor) {
+      this.editor.setAngleDimensions(state.angleDimensions || []);
+    }
+
     this.solve();
   }
 
   loadSebentaExercise(exId) {
     if (!exId) return;
+
+    let angleDims = [];
 
     if (exId === 'ex1') {
       this.subType = 'barra2d';
@@ -940,6 +950,7 @@ export class EacModule extends SubjectTemplate {
       this.forces = [
         { node: 4, px: 2, py: -1, m: 0 }
       ];
+      angleDims = [{ el1: 2, el2: 3, value: 45 }];
     } else if (exId === 'ex2') {
       this.subType = 'barra2d';
       this.nodes = [
@@ -956,6 +967,7 @@ export class EacModule extends SubjectTemplate {
       this.forces = [
         { node: 4, px: -1, py: -1, m: 0 }
       ];
+      angleDims = [{ el1: 1, el2: 2, value: 26.6 }, { el1: 2, el2: 3, value: 26.6 }];
     } else if (exId === 'ex3') {
       this.subType = 'barra2d';
       this.nodes = [
@@ -972,6 +984,7 @@ export class EacModule extends SubjectTemplate {
       this.forces = [
         { node: 4, px: -1, py: -2, m: 0 }
       ];
+      angleDims = [{ el1: 1, el2: 2, value: 26.6 }, { el1: 1, el2: 3, value: 26.6 }];
     } else if (exId === 'ex4') {
       this.subType = 'barra2d';
       this.nodes = [
@@ -988,6 +1001,7 @@ export class EacModule extends SubjectTemplate {
       this.forces = [
         { node: 2, px: 3, py: 2, m: 0 }
       ];
+      angleDims = [{ el1: 1, el2: 2, value: 30 }];
     } else if (exId === 'ex5') {
       this.subType = 'barra2d';
       this.nodes = [
@@ -1004,6 +1018,7 @@ export class EacModule extends SubjectTemplate {
       this.forces = [
         { node: 2, px: 1.879, py: 0.684, m: 0 }
       ];
+      angleDims = [{ el1: 1, el2: 2, value: 26.6 }];
     } else if (exId === 'ex6') {
       this.subType = 'barra2d';
       this.nodes = [
@@ -1022,6 +1037,7 @@ export class EacModule extends SubjectTemplate {
         { node: 3, px: -3, py: 0, m: 0 },
         { node: 4, px: 0, py: -1, m: 0 }
       ];
+      angleDims = [{ el1: 1, el2: 3, value: 45 }, { el1: 2, el2: 4, value: 45 }];
     } else if (exId === 'ex7') {
       this.subType = 'viga';
       this.nodes = [
@@ -1070,6 +1086,7 @@ export class EacModule extends SubjectTemplate {
       this.forces = [
         { node: 2, px: 0, py: -1, m: 0 }
       ];
+      angleDims = [{ el1: 1, el2: 2, value: 90 }];
     } else if (exId === 'ex11') {
       this.subType = 'vigabarra2d';
       this.nodes = [
@@ -1084,6 +1101,7 @@ export class EacModule extends SubjectTemplate {
         { id: 3, type: 'frame', n1: 3, n2: 4, E: 1, A: 1, I: 1, L: 1, p0: 0, pL: 0, py: '' }
       ];
       this.forces = [];
+      angleDims = [{ el1: 1, el2: 2, value: 45 }, { el1: 2, el2: 3, value: 90 }];
     } else if (exId === 'ex12') {
       this.subType = 'vigabarra2d';
       this.nodes = [
@@ -1098,6 +1116,7 @@ export class EacModule extends SubjectTemplate {
         { id: 3, type: 'frame', n1: 3, n2: 4, E: 1, A: 1, I: 1, L: 1.118, p0: 1, pL: 1, py: '' }
       ];
       this.forces = [];
+      angleDims = [{ el1: 1, el2: 2, value: 63.4 }, { el1: 2, el2: 3, value: 63.4 }];
     } else if (exId === 'ex13') {
       this.subType = 'viga';
       this.nodes = [
@@ -1139,9 +1158,15 @@ export class EacModule extends SubjectTemplate {
         { id: 3, type: 'frame', n1: 3, n2: 4, E: 1, A: 1, I: 1, L: 1, p0: -3, pL: -3, py: '' }
       ];
       this.forces = [];
+      angleDims = [{ el1: 1, el2: 2, value: 45 }, { el1: 2, el2: 3, value: 90 }];
     }
 
     this.renderWorkspace();
+    
+    if (this.editor) {
+      this.editor.setAngleDimensions(angleDims);
+    }
+
     this.solve();
   }
 

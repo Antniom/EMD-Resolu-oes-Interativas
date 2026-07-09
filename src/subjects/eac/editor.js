@@ -35,7 +35,8 @@ export class EacEditor {
     this.animationAmplitude = 30; // pixels of max deflection
     this.animationTime = 0;
     this.animationFrameId = null;
-    this.modeShapes = []; // array of mode vectors
+    this.angleDimensions = [];
+    this.selectedAngleBars = [];
 
     this.initEvents();
     this.resizeCanvas();
@@ -48,6 +49,11 @@ export class EacEditor {
     this.forces = forces || [];
     this.selectedNodeId = null;
     this.selectedElementId = null;
+    this.fitToModel();
+  }
+
+  setAngleDimensions(dims) {
+    this.angleDimensions = dims || [];
     this.draw();
   }
 
@@ -71,12 +77,49 @@ export class EacEditor {
     const rect = this.canvas.parentElement.getBoundingClientRect();
     this.canvas.width = rect.width || 600;
     this.canvas.height = rect.height || 400;
+    this.fitToModel();
+  }
+
+  fitToModel() {
+    if (!this.nodes || this.nodes.length === 0) return;
     
-    // Position the origin so that the model fits nicely in the center area
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    
+    for (let n of this.nodes) {
+      if (n.x < minX) minX = n.x;
+      if (n.x > maxX) maxX = n.x;
+      if (n.y < minY) minY = n.y;
+      if (n.y > maxY) maxY = n.y;
+    }
+    
+    // Fallbacks for single node or collinear nodes
+    if (minX === maxX) { minX -= 1.5; maxX += 1.5; }
+    if (minY === maxY) { minY -= 1.5; maxY += 1.5; }
+    
+    const midX = (minX + maxX) / 2;
+    const midY = (minY + maxY) / 2;
+    
+    const modelW = maxX - minX;
+    const modelH = maxY - minY;
+    
+    // Compute best scale factor
+    const padding = 100; // pixels of padding around structure
+    const drawW = this.canvas.width - 2 * padding;
+    const drawH = this.canvas.height - 2 * padding;
+    
+    let scaleX = drawW / modelW;
+    let scaleY = drawH / modelH;
+    let idealGrid = Math.min(scaleX, scaleY);
+    
+    // Cap grid size between 60px (minimum zoom out) and 180px (maximum zoom in)
+    this.gridSize = Math.max(60, Math.min(idealGrid, 180));
+    
     this.origin = {
-      x: Math.round(this.canvas.width / 2.6), 
-      y: Math.round(this.canvas.height / 1.5)
+      x: this.canvas.width / 2 - midX * this.gridSize,
+      y: this.canvas.height / 2 + midY * this.gridSize
     };
+    
     this.draw();
   }
 
@@ -219,6 +262,40 @@ export class EacEditor {
             this.triggerChange();
           }
         }
+      } else if (this.tool === 'angle') {
+        const hitEl = this.getElementAt(cx, cy);
+        if (hitEl) {
+          if (!this.selectedAngleBars.includes(hitEl)) {
+            this.selectedAngleBars.push(hitEl);
+            this.draw();
+            
+            if (this.selectedAngleBars.length === 2) {
+              const el1Id = this.selectedAngleBars[0];
+              const el2Id = this.selectedAngleBars[1];
+              this.selectedAngleBars = [];
+              
+              const el1 = this.elements.find(e => e.id === el1Id);
+              const el2 = this.elements.find(e => e.id === el2Id);
+              if (el1 && el2) {
+                const nCommonId = [el1.n1, el1.n2].find(id => id === el2.n1 || id === el2.n2);
+                if (nCommonId) {
+                  setTimeout(() => {
+                    const promptVal = prompt("Introduza o ângulo entre os dois elementos em graus (º):");
+                    if (promptVal !== null) {
+                      const targetAngleDeg = parseFloat(promptVal);
+                      if (!isNaN(targetAngleDeg)) {
+                        this.applyAngleConstraint(nCommonId, el1Id, el2Id, targetAngleDeg);
+                      }
+                    }
+                  }, 50);
+                } else {
+                  alert("Os dois elementos selecionados devem partilhar um nó comum para definir um ângulo!");
+                  this.draw();
+                }
+              }
+            }
+          }
+        }
       }
     } else if (e.button === 2) { // Right click delete
       if (hitNode) {
@@ -346,6 +423,9 @@ export class EacEditor {
         this.ctx.setLineDash([]);
       }
     }
+
+    // Draw angle dimensions
+    this.drawAngleDimensions();
   }
 
   drawGrid() {
@@ -478,7 +558,7 @@ export class EacEditor {
     const p1 = this.getNodePositionAnimated(n1.id);
     const p2 = this.getNodePositionAnimated(n2.id);
 
-    const isSelected = this.selectedElementId === el.id;
+    const isSelected = this.selectedElementId === el.id || this.selectedAngleBars.includes(el.id);
 
     this.ctx.beginPath();
     this.ctx.strokeStyle = isSelected ? '#D96C53' : (el.type === 'spring' ? '#795240' : '#191919');
@@ -544,7 +624,13 @@ export class EacEditor {
     const { x, y } = this.getNodePositionAnimated(node.id);
     this.ctx.save();
     this.ctx.translate(x, y);
-    this.ctx.rotate(node.angle * Math.PI / 180);
+
+    // Automatically calculate support angle if not explicitly set (or equals 0)
+    let angle = node.angle || 0;
+    if (angle === 0) {
+      angle = this.getAutoSupportAngle(node.id);
+    }
+    this.ctx.rotate(angle * Math.PI / 180);
 
     this.ctx.strokeStyle = '#191919'; // Textbook dark gray/black
     this.ctx.fillStyle = 'rgba(25, 25, 25, 0.04)';
@@ -790,5 +876,125 @@ export class EacEditor {
     this.ctx.fillText(`p(x)`, midX - 10, midH - 6);
 
     this.ctx.restore();
+  }
+
+  getAutoSupportAngle(nodeId) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return 0;
+    
+    // Find all connected elements
+    const connected = this.elements.filter(el => el.n1 === nodeId || el.n2 === nodeId);
+    if (connected.length === 0) return 0;
+    
+    let sumDx = 0;
+    let sumDy = 0;
+    for (let el of connected) {
+      const otherId = el.n1 === nodeId ? el.n2 : el.n1;
+      const otherNode = this.nodes.find(n => n.id === otherId);
+      if (otherNode) {
+        const dx = otherNode.x - node.x;
+        const dy = otherNode.y - node.y;
+        const len = Math.hypot(dx, dy);
+        if (len > 0) {
+          sumDx += dx / len;
+          sumDy += dy / len;
+        }
+      }
+    }
+    
+    if (sumDx === 0 && sumDy === 0) return 0;
+    
+    // The average direction of connected bars
+    const avgAngle = Math.atan2(sumDy, sumDx) * 180 / Math.PI;
+    
+    // Return the opposite angle (rotated by 180 degrees)
+    return Math.round(avgAngle + 180) % 360;
+  }
+
+  drawAngleDimensions() {
+    this.angleDimensions.forEach(dim => {
+      const el1 = this.elements.find(e => e.id === dim.el1);
+      const el2 = this.elements.find(e => e.id === dim.el2);
+      if (!el1 || !el2) return;
+      
+      // Find common node
+      const nCommonId = [el1.n1, el1.n2].find(id => id === el2.n1 || id === el2.n2);
+      if (!nCommonId) return;
+      
+      const nCommon = this.nodes.find(n => n.id === nCommonId);
+      const n1OtherId = el1.n1 === nCommonId ? el1.n2 : el1.n1;
+      const n2OtherId = el2.n1 === nCommonId ? el2.n2 : el2.n1;
+      
+      const n1Other = this.nodes.find(n => n.id === n1OtherId);
+      const n2Other = this.nodes.find(n => n.id === n2OtherId);
+      if (!nCommon || !n1Other || !n2Other) return;
+      
+      const pCommon = this.getNodePositionAnimated(nCommon.id);
+      const p1 = this.getNodePositionAnimated(n1Other.id);
+      const p2 = this.getNodePositionAnimated(n2Other.id);
+      
+      // Angles of vectors
+      const a1 = Math.atan2(p1.y - pCommon.y, p1.x - pCommon.x);
+      const a2 = Math.atan2(p2.y - pCommon.y, p2.x - pCommon.x);
+      
+      // Draw arc
+      const radius = 35;
+      this.ctx.beginPath();
+      this.ctx.arc(pCommon.x, pCommon.y, radius, a1, a2, a2 < a1);
+      this.ctx.strokeStyle = '#D96C53'; // burnt orange
+      this.ctx.lineWidth = 1.5;
+      this.ctx.stroke();
+      
+      // Text label in the middle of arc
+      let midAngle = (a1 + a2) / 2;
+      if (Math.abs(a2 - a1) > Math.PI) {
+        midAngle += Math.PI;
+      }
+      const tx = pCommon.x + (radius + 15) * Math.cos(midAngle);
+      const ty = pCommon.y + (radius + 15) * Math.sin(midAngle);
+      
+      this.ctx.fillStyle = '#D96C53';
+      this.ctx.font = 'bold 9px Inter';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(`${dim.value}º`, tx, ty);
+    });
+  }
+
+  applyAngleConstraint(nCommonId, el1Id, el2Id, targetAngleDeg) {
+    const el1 = this.elements.find(e => e.id === el1Id);
+    const el2 = this.elements.find(e => e.id === el2Id);
+    if (!el1 || !el2) return;
+
+    const nCommon = this.nodes.find(n => n.id === nCommonId);
+    const n1OtherId = el1.n1 === nCommonId ? el1.n2 : el1.n1;
+    const n2OtherId = el2.n1 === nCommonId ? el2.n2 : el2.n1;
+
+    const n1Other = this.nodes.find(n => n.id === n1OtherId);
+    const n2Other = this.nodes.find(n => n.id === n2OtherId);
+    if (!nCommon || !n1Other || !n2Other) return;
+
+    // Angles of vectors
+    const a1 = Math.atan2(n1Other.y - nCommon.y, n1Other.x - nCommon.x);
+    
+    // We want the vector to the other node to be at a1 + targetAngleDeg
+    const targetAngleRad = targetAngleDeg * Math.PI / 180;
+    const newA = a1 + targetAngleRad;
+
+    // Rotate n2Other around nCommon to the new angle, keeping same distance
+    const r2 = Math.hypot(n2Other.x - nCommon.x, n2Other.y - nCommon.y);
+    n2Other.x = nCommon.x + r2 * Math.cos(newA);
+    n2Other.y = nCommon.y + r2 * Math.sin(newA);
+
+    // Save this dimension annotation so it appears permanently on representation
+    this.angleDimensions = this.angleDimensions.filter(d => !((d.el1 === el1Id && d.el2 === el2Id) || (d.el1 === el2Id && d.el2 === el1Id)));
+    this.angleDimensions.push({
+      el1: el1Id,
+      el2: el2Id,
+      value: targetAngleDeg
+    });
+
+    this.triggerChange();
+    this.draw();
   }
 }
