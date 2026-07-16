@@ -491,19 +491,6 @@ export class MecAplicadaEditor {
     return Math.sqrt(Math.pow(px - (x1 + t * (x2 - x1)), 2) + Math.pow(py - (y1 + t * (y2 - y1)), 2));
   }
 
-  drawGrid() {
-    const ctx = this.ctx;
-    ctx.strokeStyle = '#F0EEE1';
-    ctx.lineWidth = 1;
-    const spacing = 40;
-    for (let x = 0; x < this.canvas.width; x += spacing) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height); ctx.stroke();
-    }
-    for (let y = 0; y < this.canvas.height; y += spacing) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y); ctx.stroke();
-    }
-  }
-
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawGrid();
@@ -521,15 +508,31 @@ export class MecAplicadaEditor {
     }
   }
 
+  drawGrid() {
+    const ctx = this.ctx;
+    ctx.strokeStyle = '#F0EEE1';
+    ctx.lineWidth = 1;
+    const spacing = 40;
+    for (let x = 0; x < this.canvas.width; x += spacing) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < this.canvas.height; y += spacing) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y); ctx.stroke();
+    }
+  }
+
   drawVibracoes() {
     const ctx = this.ctx;
     let theta = 0;
+    let dtheta = 0;
     if (this.isAnimating && this.solvedResult && this.solvedResult.trajectory) {
       const traj = this.solvedResult.trajectory;
       const totalDuration = 8.0;
       const t = this.animationTime % totalDuration;
       const stepIdx = Math.floor((t / totalDuration) * traj.length) % traj.length;
-      theta = traj[stepIdx].theta;
+      const trajPt = traj[stepIdx];
+      theta = trajPt.theta;
+      dtheta = trajPt.dtheta || 0;
     }
 
     ctx.save();
@@ -569,6 +572,12 @@ export class MecAplicadaEditor {
 
     ctx.restore(); // Restore back to global coordinate system!
 
+    // Draw dynamic angles text overlay next to the pivot
+    ctx.fillStyle = '#191919'; ctx.font = 'bold 10px Inter';
+    ctx.fillText(`\u03b8 = ${(theta * 180 / Math.PI).toFixed(2)}\u00b0`, px - 35, py - 35);
+    ctx.fillStyle = '#C05B42';
+    ctx.fillText(`\u03c9 = ${dtheta.toFixed(2)} rad/s`, px - 45, py - 22);
+
     // Draw springs in global coordinates (vertically connected from bar to ground line)
     this.springs.forEach(s => {
       const d = (s.x - this.pivotX) * this.gridSize;
@@ -580,6 +589,10 @@ export class MecAplicadaEditor {
       
       const isActive = this.isItemActive('spring', s.id);
       this.drawSpring(x_attach, y_attach, h, isActive);
+
+      // Draw Spring Force Vector Arrow
+      const forceVal = -s.k * d * theta / this.gridSize;
+      this.drawForceVector(x_attach, y_attach, 0, forceVal, '#D96C53', `Fk=${forceVal.toFixed(1)} N`);
     });
 
     // Draw dampers in global coordinates
@@ -593,6 +606,10 @@ export class MecAplicadaEditor {
 
       const isActive = this.isItemActive('damper', d_item.id);
       this.drawDamper(x_attach, y_attach, h, isActive);
+
+      // Draw Damper Force Vector Arrow
+      const forceVal = -d_item.c * d * dtheta / this.gridSize;
+      this.drawForceVector(x_attach, y_attach, 0, forceVal, '#2A9D8F', `Fc=${forceVal.toFixed(1)} N`);
     });
 
     // Draw harmonic force in global coordinates
@@ -604,8 +621,11 @@ export class MecAplicadaEditor {
       const isActive = this.isItemActive('force', 'main');
       let f_scale = this.isAnimating ? Math.sin(this.force.w * this.animationTime) : 1.0;
       const arrowLength = 50 * f_scale;
+      const forceVal = this.force.F0 * f_scale;
       if (Math.abs(arrowLength) > 5) {
         this.drawArrow(x_attach, y_attach, x_attach, y_attach - arrowLength, isActive !== 'none' ? '#BC4749' : '#2D6A4F', isActive !== 'none' ? 4 : 2.5);
+        ctx.fillStyle = '#2D6A4F'; ctx.font = 'bold 9px Inter';
+        ctx.fillText(`F(t)=${forceVal.toFixed(1)} N`, x_attach + 8, y_attach - arrowLength);
       }
     }
     
@@ -617,10 +637,23 @@ export class MecAplicadaEditor {
   drawQuatroBarras() {
     const ctx = this.ctx;
     let t1 = 45 * Math.PI / 180;
+    let step = null;
+
     if (this.isAnimating) {
       t1 = this.animationTime * this.w1;
     } else if (this.solvedResult && this.solvedResult.results) {
       t1 = this.solvedResult.results.t1;
+    }
+
+    // Lookup matching step from solver trajectory for detailed reaction force values
+    if (this.solvedResult && this.solvedResult.trajectory) {
+      const traj = this.solvedResult.trajectory;
+      const currentDeg = (t1 * 180 / Math.PI) % 360;
+      let minDiff = Infinity;
+      traj.forEach(pt => {
+        const diff = Math.abs(pt.theta1Deg - currentDeg);
+        if (diff < minDiff) { minDiff = diff; step = pt; }
+      });
     }
 
     const O_x = this.origin.x;
@@ -636,16 +669,15 @@ export class MecAplicadaEditor {
       return;
     }
     
-    const t2 = this.solvedResult && this.solvedResult.results ? this.solvedResult.results.t2 : 0;
+    const t2 = step ? step.t2 : (this.solvedResult && this.solvedResult.results ? this.solvedResult.results.t2 : 0);
     const xB = xA + this.r2 * Math.cos(t2) * this.gridSize;
     const yB = yA - this.r2 * Math.sin(t2) * this.gridSize;
-    const t4 = this.solvedResult && this.solvedResult.results ? this.solvedResult.results.t4 : 0;
+    const t4 = step ? step.t4 : (this.solvedResult && this.solvedResult.results ? this.solvedResult.results.t4 : 0);
 
     // Draw CIR lines & dot
-    if (this.solvedResult && this.solvedResult.results && this.solvedResult.results.CIR) {
-      const cir_model = this.solvedResult.results.CIR;
-      const cir_x = O_x + cir_model.x * this.gridSize;
-      const cir_y = O_y - cir_model.y * this.gridSize;
+    if (step && step.CIR) {
+      const cir_x = O_x + step.CIR.x * this.gridSize;
+      const cir_y = O_y - step.CIR.y * this.gridSize;
 
       ctx.strokeStyle = '#BC4749'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
       ctx.beginPath(); ctx.moveTo(O_x, O_y); ctx.lineTo(cir_x, cir_y); ctx.stroke();
@@ -673,6 +705,23 @@ export class MecAplicadaEditor {
     ctx.lineWidth = 12;
     ctx.beginPath(); ctx.moveTo(xD, yD); ctx.lineTo(xB, yB); ctx.stroke(); // Follower
 
+    // Overlay Angles
+    this.drawAngleArc(O_x, O_y, 0, t1, 30, `\u03b81=${(t1 * 180 / Math.PI).toFixed(0)}\u00b0`);
+    this.drawAngleArc(xD, yD, 0, t4, 30, `\u03b84=${(t4 * 180 / Math.PI).toFixed(0)}\u00b0`);
+
+    // Draw Reaction Forces & Input Torque overlay from Trajectory Step
+    if (step && step.forces) {
+      const f = step.forces;
+      // Reactions on supports
+      this.drawForceVector(O_x, O_y, f.Ox, f.Oy, '#2A9D8F', `FO=(${f.Ox.toFixed(0)},${f.Oy.toFixed(0)})N`);
+      this.drawForceVector(xD, yD, f.Dx, f.Dy, '#2A9D8F', `FD=(${f.Dx.toFixed(0)},${f.Dy.toFixed(0)})N`);
+      // Reactions at pin joints
+      this.drawForceVector(xA, yA, f.Ax, f.Ay, '#D96C53', `FA=${Math.sqrt(f.Ax*f.Ax+f.Ay*f.Ay).toFixed(0)}N`);
+      this.drawForceVector(xB, yB, f.Bx, f.By, '#D96C53', `FB=${Math.sqrt(f.Bx*f.Bx+f.By*f.By).toFixed(0)}N`);
+      // Input motor torque curved arrow
+      this.drawCurvedArrow(O_x, O_y, 45, '#E76F51', `M=${f.M.toFixed(2)} N\u00b7m`);
+    }
+
     // Draw active draggable joint circles
     const joints = [
       { name: 'joint_A', x: xA, y: yA },
@@ -697,10 +746,22 @@ export class MecAplicadaEditor {
   drawBielaManivela() {
     const ctx = this.ctx;
     let t1 = 90 * Math.PI / 180;
+    let step = null;
+
     if (this.isAnimating) {
       t1 = this.animationTime * this.w1;
     } else if (this.solvedResult && this.solvedResult.results) {
       t1 = this.solvedResult.results.t1;
+    }
+
+    if (this.solvedResult && this.solvedResult.trajectory) {
+      const traj = this.solvedResult.trajectory;
+      const currentDeg = (t1 * 180 / Math.PI) % 360;
+      let minDiff = Infinity;
+      traj.forEach(pt => {
+        const diff = Math.abs(pt.theta1Deg - currentDeg);
+        if (diff < minDiff) { minDiff = diff; step = pt; }
+      });
     }
 
     const O_x = this.origin.x;
@@ -722,10 +783,9 @@ export class MecAplicadaEditor {
     ctx.setLineDash([]);
 
     // CIR
-    if (this.solvedResult && this.solvedResult.results && this.solvedResult.results.CIR) {
-      const cir_model = this.solvedResult.results.CIR;
-      const cir_x = O_x + cir_model.x * this.gridSize;
-      const cir_y = O_y - cir_model.y * this.gridSize;
+    if (step && step.CIR) {
+      const cir_x = O_x + step.CIR.x * this.gridSize;
+      const cir_y = O_y - step.CIR.y * this.gridSize;
 
       ctx.strokeStyle = '#BC4749'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
       ctx.beginPath(); ctx.moveTo(O_x, O_y); ctx.lineTo(cir_x, cir_y); ctx.stroke();
@@ -751,6 +811,36 @@ export class MecAplicadaEditor {
     // Piston - safe roundRect drawing
     ctx.fillStyle = '#FAFAFA'; ctx.strokeStyle = '#191919'; ctx.lineWidth = 2.5;
     drawRoundRect(ctx, xB - 24, yB - 14, 48, 28, 4); ctx.fill(); ctx.stroke();
+
+    // Overlay Crank angle
+    this.drawAngleArc(O_x, O_y, 0, t1, 25, `\u03b81=${(t1 * 180 / Math.PI).toFixed(0)}\u00b0`);
+
+    // Draw dynamic reactions and velocities from trajectory step
+    if (step && step.forces) {
+      const f = step.forces;
+      // Reactions on crank support O
+      this.drawForceVector(O_x, O_y, f.Ox, f.Oy, '#2A9D8F', `FO=(${f.Ox.toFixed(0)},${f.Oy.toFixed(0)})N`);
+      // Reactions at pins A and B
+      this.drawForceVector(xA, yA, f.Ax, f.Ay, '#D96C53', `FA=${Math.sqrt(f.Ax*f.Ax+f.Ay*f.Ay).toFixed(0)}N`);
+      this.drawForceVector(xB, yB, f.Bx, f.By, '#D96C53', `FB=${Math.sqrt(f.Bx*f.Bx+f.By*f.By).toFixed(0)}N`);
+      // Normal wall reaction on piston B
+      this.drawForceVector(xB, yB, 0, f.N, '#2D6A4F', `N=${f.N.toFixed(0)}N`);
+      // Motor torque curved arrow
+      this.drawCurvedArrow(O_x, O_y, 40, '#E76F51', `M=${f.M.toFixed(1)} N\u00b7m`);
+      
+      // Velocities and accelerations at B (Piston)
+      const v_scale = 15;
+      const a_scale = 0.5;
+      // Piston horizontal velocity vector arrow
+      this.drawArrow(xB, yB, xB + step.vB * v_scale, yB, '#2D6A4F', 2.0);
+      ctx.fillStyle = '#2D6A4F'; ctx.font = 'bold 9px Inter';
+      ctx.fillText(`vB=${step.vB.toFixed(2)} m/s`, xB + step.vB * v_scale + 5, yB - 6);
+      
+      // Piston horizontal acceleration vector arrow
+      this.drawArrow(xB, yB + 6, xB + step.aB * a_scale, yB + 6, '#BC4749', 2.0);
+      ctx.fillStyle = '#BC4749';
+      ctx.fillText(`aB=${step.aB.toFixed(1)} m/s\u00b2`, xB + step.aB * a_scale + 5, yB + 14);
+    }
 
     // Draggable Pin A
     const activeStateA = this.isItemActive('joint_A', 'none');
@@ -835,6 +925,32 @@ export class MecAplicadaEditor {
     ctx.fillStyle = activeStateB === 'selected' ? '#D96C53' : (activeStateB === 'hovered' ? '#d8816c' : '#ffffff');
     ctx.strokeStyle = '#191919'; ctx.lineWidth = 2;
     drawRoundRect(ctx, xB - 6, yB - 12, 12, 24, 2); ctx.fill(); ctx.stroke();
+
+    // Overlay Rod Angles and Rod speed
+    this.drawAngleArc(O_x, O_y, 0, t, 40, `\u03b8=${(t * 180 / Math.PI).toFixed(0)}\u00b0`);
+
+    // Dynamically calculate and draw velocities
+    const vA = -this.L * this.w * Math.sin(t);
+    const vB = this.L * this.w * Math.cos(t);
+
+    const v_scale = 35;
+    this.drawArrow(xA, yA, xA + vA * v_scale, yA, '#2D6A4F', 2.0);
+    ctx.fillStyle = '#2D6A4F'; ctx.font = 'bold 9px Inter';
+    ctx.fillText(`vA=${vA.toFixed(2)} m/s`, xA + vA * v_scale - 15, yA - 10);
+
+    this.drawArrow(xB, yB, xB, yB - vB * v_scale, '#2D6A4F', 2.0);
+    ctx.fillText(`vB=${vB.toFixed(2)} m/s`, xB + 10, yB - vB * v_scale);
+
+    // Overlay reaction forces (Sem atrito: NA perpendicular to floor, NB perpendicular to wall)
+    if (this.solvedResult && this.solvedResult.results) {
+      const NA = this.solvedResult.results.NA;
+      const NB = this.solvedResult.results.NB;
+      this.drawForceVector(xA, yA, 0, NA, '#2A9D8F', `NA=${NA.toFixed(1)} N`);
+      this.drawForceVector(xB, yB, NB, 0, '#2A9D8F', `NB=${NB.toFixed(1)} N`);
+    }
+
+    ctx.fillStyle = '#C05B42'; ctx.font = 'bold 10px Inter';
+    ctx.fillText(`\u03c9 = -${this.w.toFixed(1)} rad/s`, xG - 30, yG - 15);
   }
 
   drawDiscoRolante() {
@@ -880,6 +996,8 @@ export class MecAplicadaEditor {
     // Contact point C (CIR)
     ctx.fillStyle = '#BC4749'; ctx.beginPath(); ctx.arc(CIR_cx, CIR_cy, 6, 0, 2*Math.PI); ctx.fill();
     ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = 'bold 9px Inter'; ctx.fillStyle = '#BC4749';
+    ctx.fillText('C (CIR, vC=0)', CIR_cx + 8, CIR_cy - 4);
 
     // Point P
     const tP = this.thetaP * Math.PI / 180 + rot;
@@ -905,7 +1023,26 @@ export class MecAplicadaEditor {
     const activeStateVel = this.isItemActive('vel_arrow', 'none');
     
     this.drawArrow(center_cx, center_cy, center_cx + vG_scaled, center_cy, activeStateVel !== 'none' ? '#BC4749' : '#2D6A4F', activeStateVel !== 'none' ? 4 : 2.5);
-    ctx.fillStyle = '#2D6A4F'; ctx.fillText('v_G', center_cx + vG_scaled + 5, center_cy - 5);
+    ctx.fillStyle = '#2D6A4F'; ctx.font = 'bold 9px Inter';
+    ctx.fillText(`v_G=${this.vG.toFixed(1)} m/s`, center_cx + vG_scaled + 5, center_cy - 5);
+
+    // Calculate and draw velocity arrow for Point P (direction perp to CP line)
+    const w_val = -this.vG / this.R; // Angular velocity (clockwise is negative)
+    const dx_P = P_cx - CIR_cx;
+    const dy_P = P_cy - CIR_cy;
+    // vP vector: vG + w x rGP. Since pure roll: vP = w x rCP.
+    // In screen coordinates: vP_x = -w * (P_cy - CIR_cy) / gridSize, vP_y = -w * (P_cx - CIR_cx) / gridSize
+    const vP_x = -w_val * (CIR_cy - P_cy) / this.gridSize;
+    const vP_y = w_val * (P_cx - CIR_cx) / this.gridSize;
+    const vP_mag = Math.sqrt(vP_x*vP_x + vP_y*vP_y);
+
+    const vP_scale = 30; // Scale factor for vector arrow
+    this.drawArrow(P_cx, P_cy, P_cx + vP_x * vP_scale, P_cy - vP_y * vP_scale, '#2D6A4F', 2.0);
+    ctx.fillStyle = '#2D6A4F'; ctx.fillText(`vP=${vP_mag.toFixed(2)} m/s`, P_cx + vP_x * vP_scale + 5, P_cy - vP_y * vP_scale);
+
+    // Show angular speed
+    ctx.fillStyle = '#C05B42'; ctx.font = 'bold 10px Inter';
+    ctx.fillText(`\u03c9 = ${w_val.toFixed(2)} rad/s`, center_cx - 40, center_cy - 20);
   }
 
   isItemActive(type, id) {
@@ -965,6 +1102,58 @@ export class MecAplicadaEditor {
     ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI/6), toY - headLen * Math.sin(angle - Math.PI/6));
     ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI/6), toY - headLen * Math.sin(angle + Math.PI/6));
     ctx.closePath(); ctx.fill();
+  }
+
+  drawForceVector(x, y, vx, vy, color, label) {
+    const len = Math.sqrt(vx*vx + vy*vy);
+    if (len < 0.1) return;
+    
+    // Scale vectors so they are visually clear (between 25 and 75 pixels)
+    const displayLen = Math.min(75, Math.max(25, len * 0.6));
+    const angle = Math.atan2(vy, vx);
+    const toX = x + displayLen * Math.cos(angle);
+    const toY = y - displayLen * Math.sin(angle); // invert Y for screen coords
+    
+    this.drawArrow(x, y, toX, toY, color, 2.5);
+    
+    const ctx = this.ctx;
+    ctx.fillStyle = color;
+    ctx.font = 'bold 9px Inter';
+    ctx.fillText(label, toX + 5, toY - 2);
+  }
+
+  drawAngleArc(x, y, startAngle, endAngle, radius, label) {
+    const ctx = this.ctx;
+    ctx.strokeStyle = '#BC4749'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, -startAngle, -endAngle, startAngle > endAngle);
+    ctx.stroke();
+    
+    // Draw text label near the middle of the arc
+    const mid = (startAngle + endAngle) / 2;
+    const tx = x + (radius + 12) * Math.cos(mid);
+    const ty = y - (radius + 12) * Math.sin(mid);
+    ctx.fillStyle = '#BC4749';
+    ctx.font = 'bold 9px Inter';
+    ctx.fillText(label, tx - 12, ty + 3);
+  }
+
+  drawCurvedArrow(x, y, radius, color, label) {
+    const ctx = this.ctx;
+    ctx.strokeStyle = color; ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    // draw a 3/4 circle arc around center x, y
+    ctx.arc(x, y, radius, -Math.PI / 6, Math.PI / 2 + Math.PI / 6);
+    ctx.stroke();
+    
+    // Draw arrow head at end of arc
+    const tx = x + radius * Math.cos(Math.PI / 2 + Math.PI / 6);
+    const ty = y + radius * Math.sin(Math.PI / 2 + Math.PI / 6);
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(tx, ty, 3.5, 0, 2*Math.PI); ctx.fill();
+
+    ctx.font = 'bold 9px Inter';
+    ctx.fillText(label, x - radius - 5, y - radius - 4);
   }
 
   drawLockedState(O_x, O_y, xD, yD, xA, yA) {

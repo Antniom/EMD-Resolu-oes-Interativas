@@ -92,8 +92,10 @@ function solveVibracoes(state) {
   for (let i = 0; i <= steps; i++) {
     const t = i * dt;
     let theta_p = 0;
+    let dtheta_p = 0;
     if (M_0 !== 0 && w_f > 0) {
       theta_p = force.type === 'sin' ? Theta_ss * Math.sin(w_f * t - phi) : Theta_ss * Math.cos(w_f * t - phi);
+      dtheta_p = force.type === 'sin' ? Theta_ss * w_f * Math.cos(w_f * t - phi) : -Theta_ss * w_f * Math.sin(w_f * t - phi);
     }
 
     let theta_h0 = x0;
@@ -106,25 +108,32 @@ function solveVibracoes(state) {
     }
 
     let theta_h = 0;
+    let dtheta_h = 0;
     if (c_eq === 0 || zeta === 0) {
       theta_h = theta_h0 * Math.cos(w_n * t) + (dtheta_h0 / w_n) * Math.sin(w_n * t);
+      dtheta_h = -theta_h0 * w_n * Math.sin(w_n * t) + dtheta_h0 * Math.cos(w_n * t);
     } else if (zeta < 1) {
       const B_h = (dtheta_h0 + zeta * w_n * theta_h0) / w_d;
       theta_h = Math.exp(-zeta * w_n * t) * (theta_h0 * Math.cos(w_d * t) + B_h * Math.sin(w_d * t));
+      dtheta_h = -zeta * w_n * theta_h + Math.exp(-zeta * w_n * t) * (-theta_h0 * w_d * Math.sin(w_d * t) + B_h * w_d * Math.cos(w_d * t));
     } else if (Math.abs(zeta - 1) < 1e-4) {
-      theta_h = Math.exp(-w_n * t) * (theta_h0 + (dtheta_h0 + w_n * theta_h0) * t);
+      const C_const = dtheta_h0 + w_n * theta_h0;
+      theta_h = Math.exp(-w_n * t) * (theta_h0 + C_const * t);
+      dtheta_h = -w_n * theta_h + Math.exp(-w_n * t) * C_const;
     } else {
       const s1 = -zeta * w_n + w_n * Math.sqrt(zeta * zeta - 1);
       const s2 = -zeta * w_n - w_n * Math.sqrt(zeta * zeta - 1);
       const C1 = (dtheta_h0 - s2 * theta_h0) / (s1 - s2);
       const C2 = (s1 * theta_h0 - dtheta_h0) / (s1 - s2);
       theta_h = C1 * Math.exp(s1 * t) + C2 * Math.exp(s2 * t);
+      dtheta_h = C1 * s1 * Math.exp(s1 * t) + C2 * s2 * Math.exp(s2 * t);
     }
 
     trajectory.push({
       time: t,
       theta: theta_h + theta_p,
-      thetaDeg: (theta_h + theta_p) * 180 / Math.PI
+      thetaDeg: (theta_h + theta_p) * 180 / Math.PI,
+      dtheta: dtheta_h + dtheta_p
     });
   }
 
