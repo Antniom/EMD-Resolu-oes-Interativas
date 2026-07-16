@@ -391,7 +391,24 @@ export class MecAplicadaModule extends SubjectTemplate {
     
     // Playback control row
     const rightSection = document.createElement('div');
-    rightSection.className = 'flex items-center gap-3 w-full xl:w-auto justify-end';
+    rightSection.className = 'flex items-center gap-3 w-full xl:w-auto justify-end flex-wrap md:flex-nowrap';
+
+    // Speed Selector dropdown
+    const speedSelect = document.createElement('select');
+    speedSelect.id = 'speed-selector';
+    speedSelect.className = 'select-input text-xs py-1.5 px-3 rounded-lg bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] outline-none cursor-pointer';
+    speedSelect.innerHTML = `
+      <option value="0.01">Velocidade: 100x mais lento</option>
+      <option value="0.1" selected>Velocidade: 10x mais lento</option>
+      <option value="1.0">Velocidade: 1x (Normal)</option>
+    `;
+    speedSelect.onchange = (e) => {
+      const mult = parseFloat(e.target.value);
+      if (this.editor) {
+        this.editor.speedMultiplier = mult;
+      }
+    };
+    rightSection.appendChild(speedSelect);
 
     const playBtn = document.createElement('button');
     playBtn.id = 'play-btn';
@@ -549,6 +566,10 @@ export class MecAplicadaModule extends SubjectTemplate {
     this.solvedResult = solved;
 
     if (this.editor) {
+      const speedSelect = document.getElementById('speed-selector');
+      if (speedSelect) {
+        this.editor.speedMultiplier = parseFloat(speedSelect.value) || 0.1;
+      }
       this.editor.setModel(solveState, solved);
     }
 

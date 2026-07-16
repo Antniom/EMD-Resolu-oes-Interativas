@@ -58,6 +58,7 @@ export class MecAplicadaEditor {
     this.animationFrameId = null;
     
     this.solvedResult = null;
+    this.speedMultiplier = 0.1; // Default 10x slower
     
     // Selection and Drag-and-Drop state
     this.hoveredItem = null;
@@ -159,7 +160,7 @@ export class MecAplicadaEditor {
   animate() {
     if (!this.isAnimating) return;
     const fps = 60;
-    this.animationTime += 1 / fps;
+    this.animationTime += (1 / fps) * this.speedMultiplier;
     this.draw();
     this.animationFrameId = requestAnimationFrame(() => this.animate());
   }
