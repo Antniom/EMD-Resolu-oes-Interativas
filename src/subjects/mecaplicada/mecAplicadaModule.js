@@ -1,5 +1,5 @@
-// Main module for Mecânica Aplicada (Applied Mechanics)
-// Orchestrates visual editing, numeric inputs, solvers, and KaTeX detailed resolutions
+// Main coordinator module for Mecânica Aplicada (Applied Mechanics)
+// Orchestrates visual editing, canvas overlays, physics solvers, and KaTeX detailed resolutions
 
 import { SubjectTemplate } from '../subjectTemplate.js';
 import { MecAplicadaEditor } from './editor.js';
@@ -13,7 +13,7 @@ export class MecAplicadaModule extends SubjectTemplate {
 
     // State Model
     this.subType = 'vibracoes'; // vibracoes, quatro_barras, biela_manivela, barra_deslizante, disco_rolante
-    this.activeTab = 'editor';  // editor, inputs, resolution
+    this.activeTab = 'editor';  // editor, resolution
 
     // 1-DOF Vibrations model state
     this.vibracoesModel = {
@@ -71,8 +71,8 @@ export class MecAplicadaModule extends SubjectTemplate {
       m: 10.0
     };
 
-    // Physics solved result
-    this.solvedResult = null;
+    // Selected visual item
+    this.selectedElement = null;
 
     // Component instances
     this.editor = null;
@@ -84,110 +84,80 @@ export class MecAplicadaModule extends SubjectTemplate {
     if (presetId === 'vib_tp1_2223') {
       this.subType = 'vibracoes';
       this.vibracoesModel = {
-        barLength: 2.0,
-        barMass: 6.0,
-        pivotX: 0.5,
+        barLength: 2.0, barMass: 6.0, pivotX: 0.5,
         springs: [{ id: 1, x: 2.0, k: 250 }],
         dampers: [{ id: 1, x: 0.0, c: 15 }],
         masses: [],
         force: { x: 2.0, F0: 10, w: 5, type: 'sin' },
-        x0: 10,
-        v0: 0
+        x0: 10, v0: 0
       };
     } else if (presetId === 'vib_tp1_1415') {
       this.subType = 'vibracoes';
       this.vibracoesModel = {
-        barLength: 1.5,
-        barMass: 4.0,
-        pivotX: 0.4,
+        barLength: 1.5, barMass: 4.0, pivotX: 0.4,
         springs: [{ id: 1, x: 1.5, k: 500 }],
         dampers: [{ id: 1, x: 0.8, c: 20 }],
         masses: [{ id: 1, x: 1.5, m: 3.0 }],
         force: { x: 1.5, F0: 25, w: 3.5, type: 'sin' },
-        x0: 15,
-        v0: 0.5
+        x0: 15, v0: 0.5
       };
     } else if (presetId === 'vib_undamped') {
       this.subType = 'vibracoes';
       this.vibracoesModel = {
-        barLength: 2.0,
-        barMass: 5.0,
-        pivotX: 0.0,
+        barLength: 2.0, barMass: 5.0, pivotX: 0.0,
         springs: [{ id: 1, x: 2.0, k: 300 }],
-        dampers: [],
-        masses: [],
+        dampers: [], masses: [],
         force: { x: 2.0, F0: 0, w: 0, type: 'sin' },
-        x0: 8,
-        v0: 0
+        x0: 8, v0: 0
       };
     } else if (presetId === 'vib_overdamped') {
       this.subType = 'vibracoes';
       this.vibracoesModel = {
-        barLength: 2.0,
-        barMass: 5.0,
-        pivotX: 0.5,
+        barLength: 2.0, barMass: 5.0, pivotX: 0.5,
         springs: [{ id: 1, x: 2.0, k: 100 }],
         dampers: [{ id: 1, x: 2.0, c: 120 }],
         masses: [],
         force: { x: 2.0, F0: 0, w: 0, type: 'sin' },
-        x0: 20,
-        v0: 0
+        x0: 20, v0: 0
       };
     } else if (presetId === 'link_tp2_2122') {
       this.subType = 'quatro_barras';
       this.quatroBarrasModel = {
         r1: 0.10, r2: 0.30, r3: 0.30, r4: 0.20,
         m1: 0.5, m2: 1.5, m4: 1.0,
-        w1: 1.5,
-        assemblyMode: 'crossed',
-        theta1: 45
+        w1: 1.5, assemblyMode: 'crossed', theta1: 45
       };
     } else if (presetId === 'link_grashof') {
       this.subType = 'quatro_barras';
       this.quatroBarrasModel = {
         r1: 0.08, r2: 0.25, r3: 0.30, r4: 0.20,
         m1: 0.4, m2: 1.2, m4: 0.8,
-        w1: 3.0,
-        assemblyMode: 'open',
-        theta1: 30
+        w1: 3.0, assemblyMode: 'open', theta1: 30
       };
     } else if (presetId === 'bm_combustion') {
       this.subType = 'biela_manivela';
       this.bielaManivelaModel = {
         r1: 0.05, r2: 0.18, m1: 0.5, m2: 1.5, mp: 0.82,
-        w1: 314.16,
-        theta1: 90
+        w1: 314.16, theta1: 90
       };
     } else if (presetId === 'bm_tambor') {
       this.subType = 'biela_manivela';
       this.bielaManivelaModel = {
         r1: 0.05, r2: 0.18, m1: 0.5, m2: 1.5, mp: 50.0,
-        w1: 0.5236,
-        theta1: 45
+        w1: 0.5236, theta1: 45
       };
     } else if (presetId === 'bd_exame') {
       this.subType = 'barra_deslizante';
-      this.barraDeslizanteModel = {
-        L: 2.0,
-        theta: 60,
-        w: 1.5,
-        m: 3.0
-      };
+      this.barraDeslizanteModel = { L: 2.0, theta: 60, w: 1.5, m: 3.0 };
     } else if (presetId === 'dr_exame') {
       this.subType = 'disco_rolante';
-      this.discoRolanteModel = {
-        R: 0.4,
-        vG: 2.0,
-        aG: 1.0,
-        rP: 0.4,
-        thetaP: 45,
-        m: 10.0
-      };
+      this.discoRolanteModel = { R: 0.4, vG: 2.0, aG: 1.0, rP: 0.4, thetaP: 45, m: 10.0 };
     }
     
     const subTypeSelect = document.getElementById('subtype-selector');
     if (subTypeSelect) subTypeSelect.value = this.subType;
     
+    this.selectedElement = null;
     this.solveAndRefresh();
   }
 
@@ -218,6 +188,7 @@ export class MecAplicadaModule extends SubjectTemplate {
     subTypeSelect.value = this.subType;
     subTypeSelect.onchange = (e) => {
       this.subType = e.target.value;
+      this.selectedElement = null;
       this.solveAndRefresh();
     };
     leftSection.appendChild(subTypeSelect);
@@ -258,13 +229,8 @@ export class MecAplicadaModule extends SubjectTemplate {
 
     const editorTabBtn = document.createElement('button');
     editorTabBtn.className = `tab-btn ${this.activeTab === 'editor' ? 'active' : ''}`;
-    editorTabBtn.innerText = 'Editor Visual 2D';
+    editorTabBtn.innerText = 'Simulação Interativa';
     editorTabBtn.onclick = () => this.switchTab('editor');
-
-    const inputsTabBtn = document.createElement('button');
-    inputsTabBtn.className = `tab-btn ${this.activeTab === 'inputs' ? 'active' : ''}`;
-    inputsTabBtn.innerText = 'Parâmetros / Propriedades';
-    inputsTabBtn.onclick = () => this.switchTab('inputs');
 
     const resTabBtn = document.createElement('button');
     resTabBtn.className = `tab-btn ${this.activeTab === 'resolution' ? 'active' : ''}`;
@@ -272,12 +238,11 @@ export class MecAplicadaModule extends SubjectTemplate {
     resTabBtn.onclick = () => this.switchTab('resolution');
 
     tabs.appendChild(editorTabBtn);
-    tabs.appendChild(inputsTabBtn);
     tabs.appendChild(resTabBtn);
     leftSection.appendChild(tabs);
     headerPanel.appendChild(leftSection);
     
-    // Playback buttons
+    // Playback control row
     const rightSection = document.createElement('div');
     rightSection.className = 'flex items-center gap-3 w-full xl:w-auto justify-end';
 
@@ -297,36 +262,32 @@ export class MecAplicadaModule extends SubjectTemplate {
     headerPanel.appendChild(rightSection);
     layout.appendChild(headerPanel);
 
-    // Workspace Layout
+    // Workspace main
     const splitWorkspace = document.createElement('div');
     splitWorkspace.className = 'flex flex-col lg:flex-row gap-6 w-full items-stretch';
 
-    // Left workspace main area
     const mainWorkspaceArea = document.createElement('div');
     mainWorkspaceArea.className = 'flex-1 flex flex-col min-h-[500px] relative';
 
-    // Panel 1: Canvas Editor
+    // Panel 1: Canvas Editor (now features absolute floating overlay control card)
     const editorPanel = document.createElement('div');
-    editorPanel.className = `w-full flex-col glass-panel rounded-2xl overflow-hidden h-[500px] bg-white ${this.activeTab === 'editor' ? 'flex' : 'hidden'}`;
+    editorPanel.className = `w-full flex-col glass-panel rounded-2xl overflow-hidden h-[500px] bg-white relative ${this.activeTab === 'editor' ? 'flex' : 'hidden'}`;
     editorPanel.id = 'panel-editor';
 
-    const editorToolbar = document.createElement('div');
-    editorToolbar.className = 'flex items-center gap-3 p-3 border-b border-[var(--panel-border)] bg-[#fafafa] text-xs';
-    editorToolbar.id = 'editor-toolbar-actions';
-    editorPanel.appendChild(editorToolbar);
-
+    // Canvas
     const canvas = document.createElement('canvas');
     canvas.className = 'flex-1 bg-[#FAF8F5] block outline-none cursor-crosshair';
     editorPanel.appendChild(canvas);
+
+    // Floating Property Inspector DOM
+    const inspector = document.createElement('div');
+    inspector.id = 'editor-inspector';
+    inspector.className = 'absolute bottom-4 left-4 right-4 glass-panel p-4 bg-white/95 rounded-xl border border-[var(--panel-border)] shadow-lg flex flex-col md:flex-row gap-4 items-center justify-between z-10 transition-all';
+    editorPanel.appendChild(inspector);
+
     mainWorkspaceArea.appendChild(editorPanel);
 
-    // Panel 2: Spreadsheet Forms
-    const inputsPanel = document.createElement('div');
-    inputsPanel.className = `w-full glass-panel rounded-2xl p-6 overflow-y-auto ${this.activeTab === 'inputs' ? 'block' : 'hidden'} min-h-[500px] bg-white`;
-    inputsPanel.id = 'panel-inputs';
-    mainWorkspaceArea.appendChild(inputsPanel);
-
-    // Panel 3: Resolution
+    // Panel 2: KaTeX Step-by-Step Resolution
     const resolutionPanel = document.createElement('div');
     resolutionPanel.className = `w-full glass-panel rounded-2xl p-6 overflow-y-auto ${this.activeTab === 'resolution' ? 'block' : 'hidden'} min-h-[500px] bg-white`;
     resolutionPanel.id = 'panel-resolution';
@@ -338,7 +299,7 @@ export class MecAplicadaModule extends SubjectTemplate {
     const sidebar = document.createElement('div');
     sidebar.className = 'w-full lg:w-[380px] flex flex-col gap-6 items-stretch';
 
-    // Live Chart Card
+    // Live Chart
     const chartCard = document.createElement('div');
     chartCard.className = 'glass-panel rounded-2xl p-4 bg-white border border-[var(--panel-border)] flex flex-col gap-3 h-[240px]';
     const chartTitle = document.createElement('h4');
@@ -373,13 +334,30 @@ export class MecAplicadaModule extends SubjectTemplate {
     layout.appendChild(splitWorkspace);
     this.container.appendChild(layout);
 
-    // Initializing instances
-    this.editor = new MecAplicadaEditor(canvas, (updatedCoords) => {
-      if (this.subType === 'vibracoes') {
-        Object.assign(this.vibracoesModel, updatedCoords);
+    // Initialize Editor with dual drag-and-drop & selection callbacks
+    this.editor = new MecAplicadaEditor(canvas, 
+      (updatedCoords) => {
+        // Drag update callback
+        if (this.subType === 'vibracoes') {
+          Object.assign(this.vibracoesModel, updatedCoords);
+        } else if (this.subType === 'quatro_barras') {
+          Object.assign(this.quatroBarrasModel, updatedCoords);
+        } else if (this.subType === 'biela_manivela') {
+          Object.assign(this.bielaManivelaModel, updatedCoords);
+        } else if (this.subType === 'barra_deslizante') {
+          Object.assign(this.barraDeslizanteModel, updatedCoords);
+        } else if (this.subType === 'disco_rolante') {
+          Object.assign(this.discoRolanteModel, updatedCoords);
+        }
+        this.solveSilently();
+        this.updateInspectorContent();
+      },
+      (selectedItem) => {
+        // Click selection callback
+        this.selectedElement = selectedItem;
+        this.updateInspectorContent();
       }
-      this.solveSilently();
-    });
+    );
 
     this.chartCanvas = plotCanvas;
     this.chartCtx = plotCanvas.getContext('2d');
@@ -387,37 +365,24 @@ export class MecAplicadaModule extends SubjectTemplate {
     this.solveAndRefresh();
   }
 
-  destroy() {
-    if (this.editor) {
-      this.editor.stopAnimation();
-    }
-  }
-
   switchTab(tabId) {
     this.activeTab = tabId;
-    
     const buttons = this.container.querySelectorAll('.tab-btn');
     buttons.forEach((btn, idx) => {
       btn.classList.remove('active');
       if (idx === 0 && tabId === 'editor') btn.classList.add('active');
-      if (idx === 1 && tabId === 'inputs') btn.classList.add('active');
-      if (idx === 2 && tabId === 'resolution') btn.classList.add('active');
+      if (idx === 1 && tabId === 'resolution') btn.classList.add('active');
     });
 
     const panelEditor = document.getElementById('panel-editor');
-    const panelInputs = document.getElementById('panel-inputs');
     const panelResolution = document.getElementById('panel-resolution');
 
-    if (panelEditor) panelEditor.className = `w-full flex-col glass-panel rounded-2xl overflow-hidden h-[500px] bg-white ${tabId === 'editor' ? 'flex' : 'hidden'}`;
-    if (panelInputs) panelInputs.className = `w-full glass-panel rounded-2xl p-6 overflow-y-auto ${tabId === 'inputs' ? 'block' : 'hidden'} min-h-[500px] bg-white`;
+    if (panelEditor) panelEditor.className = `w-full flex-col glass-panel rounded-2xl overflow-hidden h-[500px] bg-white relative ${tabId === 'editor' ? 'flex' : 'hidden'}`;
     if (panelResolution) panelResolution.className = `w-full glass-panel rounded-2xl p-6 overflow-y-auto ${tabId === 'resolution' ? 'block' : 'hidden'} min-h-[500px] bg-white`;
 
     if (tabId === 'editor' && this.editor) {
       this.editor.resizeCanvas();
-    }
-
-    if (tabId === 'inputs') {
-      this.renderInputsTab();
+      this.updateInspectorContent();
     } else if (tabId === 'resolution') {
       this.renderResolutionTab();
     }
@@ -444,12 +409,7 @@ export class MecAplicadaModule extends SubjectTemplate {
 
     this.renderResultsSummary();
     this.drawChart();
-
-    if (this.activeTab === 'inputs') {
-      this.renderInputsTab();
-    } else if (this.activeTab === 'resolution') {
-      this.renderResolutionTab();
-    }
+    this.updateInspectorContent();
 
     const playBtn = document.getElementById('play-btn');
     if (playBtn) {
@@ -486,7 +446,6 @@ export class MecAplicadaModule extends SubjectTemplate {
   togglePlayback() {
     if (!this.editor) return;
     const playBtn = document.getElementById('play-btn');
-    
     if (this.editor.isAnimating) {
       this.editor.stopAnimation();
       if (playBtn) playBtn.innerText = 'Animar';
@@ -506,331 +465,367 @@ export class MecAplicadaModule extends SubjectTemplate {
     if (playBtn) playBtn.innerText = 'Animar';
   }
 
-  renderInputsTab() {
-    const container = document.getElementById('panel-inputs');
+  // Visual Overlay Property Inspector content renderer
+  updateInspectorContent() {
+    const container = document.getElementById('editor-inspector');
     if (!container) return;
 
-    if (this.subType === 'vibracoes') {
-      this.renderVibracoesInputs(container);
-    } else if (this.subType === 'quatro_barras') {
-      this.renderQuatroBarrasInputs(container);
-    } else if (this.subType === 'biela_manivela') {
-      this.renderBielaManivelaInputs(container);
-    } else if (this.subType === 'barra_deslizante') {
-      this.renderBarraDeslizanteInputs(container);
-    } else if (this.subType === 'disco_rolante') {
-      this.renderDiscoRolanteInputs(container);
-    }
-  }
-
-  renderVibracoesInputs(container) {
-    const v = this.vibracoesModel;
-    container.innerHTML = `
-      <div class="flex flex-col gap-6 text-sm text-[var(--text-primary)]">
-        <h3 class="text-base font-bold border-b border-[var(--panel-border)] pb-2 flex items-center justify-between">
-          <span>Parâmetros Dinâmicos da Barra e Apoio</span>
-          <span class="text-xs font-normal text-slate-400">1 G.D.L.</span>
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Comprimento da Barra (L) [m]</label>
-            <input type="number" id="input-barLength" value="${v.barLength}" step="0.1" min="0.5" class="input-field">
+    if (!this.selectedElement) {
+      // DEFAULT: Instructions & Add Shortcuts
+      let addToolbarHtml = '';
+      if (this.subType === 'vibracoes') {
+        addToolbarHtml = `
+          <div class="flex items-center gap-2 mt-2 md:mt-0">
+            <button id="ins-add-spring" class="btn btn-secondary py-1 px-3 text-[11px] font-medium">+ Mola</button>
+            <button id="ins-add-damper" class="btn btn-secondary py-1 px-3 text-[11px] font-medium">+ Amortecedor</button>
+            <button id="ins-add-mass" class="btn btn-secondary py-1 px-3 text-[11px] font-medium">+ Massa</button>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Massa da Barra (m) [kg]</label>
-            <input type="number" id="input-barMass" value="${v.barMass}" step="0.5" min="0.1" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Coordenada Apoio Pivot O (x_O) [m]</label>
-            <input type="number" id="input-pivotX" value="${v.pivotX}" step="0.05" min="0" max="${v.barLength}" class="input-field">
-          </div>
-        </div>
-        <h3 class="text-base font-bold border-b border-[var(--panel-border)] pb-2 mt-4">Condições Iniciais e Excitação Forçada</h3>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Ângulo Inicial (\\theta_0) [graus]</label>
-            <input type="number" id="input-x0" value="${v.x0}" step="1" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Velocidade Angular Inic. (v_0) [rad/s]</label>
-            <input type="number" id="input-v0" value="${v.v0}" step="0.1" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Força Amplitude (F_0) [N]</label>
-            <input type="number" id="input-F0" value="${v.force.F0}" step="1" min="0" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Freq. Força (\\omega_f) [rad/s]</label>
-            <input type="number" id="input-wf" value="${v.force.w}" step="0.5" min="0" class="input-field">
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Posição da Força (x_F) [m]</label>
-            <input type="number" id="input-forceX" value="${v.force.x}" step="0.05" min="0" max="${v.barLength}" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Tipo da Força Externa</label>
-            <select id="input-forceType" class="select-input">
-              <option value="sin" ${v.force.type === 'sin' ? 'selected' : ''}>Seno - A sin(\\omega_f t)</option>
-              <option value="cos" ${v.force.type === 'cos' ? 'selected' : ''}>Cosseno - A cos(\\omega_f t)</option>
-            </select>
-          </div>
-        </div>
-        <div class="flex justify-between items-center border-b border-[var(--panel-border)] pb-2 mt-4">
-          <h3 class="text-base font-bold">Molas Acopladas</h3>
-          <button id="add-spring-btn" class="btn btn-secondary py-1 px-3 text-xs font-medium">+ Adicionar Mola</button>
-        </div>
-        <div id="springs-table-container"></div>
-        <div class="flex justify-between items-center border-b border-[var(--panel-border)] pb-2 mt-4">
-          <h3 class="text-base font-bold">Amortecedores Acoplados</h3>
-          <button id="add-damper-btn" class="btn btn-secondary py-1 px-3 text-xs font-medium">+ Adicionar Amortecedor</button>
-        </div>
-        <div id="dampers-table-container"></div>
-      </div>
-    `;
-
-    this.renderVibracoesTables();
-
-    const bindVal = (id, target, key, isFloat = true) => {
-      const el = document.getElementById(id);
-      if (el) el.onchange = (e) => {
-        target[key] = isFloat ? parseFloat(e.target.value) : e.target.value;
-        this.solveAndRefresh();
-      };
-    };
-
-    bindVal('input-barLength', this.vibracoesModel, 'barLength');
-    bindVal('input-barMass', this.vibracoesModel, 'barMass');
-    bindVal('input-pivotX', this.vibracoesModel, 'pivotX');
-    bindVal('input-x0', this.vibracoesModel, 'x0');
-    bindVal('input-v0', this.vibracoesModel, 'v0');
-    bindVal('input-F0', this.vibracoesModel.force, 'F0');
-    bindVal('input-wf', this.vibracoesModel.force, 'w');
-    bindVal('input-forceX', this.vibracoesModel.force, 'x');
-    bindVal('input-forceType', this.vibracoesModel.force, 'type', false);
-  }
-
-  renderVibracoesTables() {
-    const v = this.vibracoesModel;
-    const springsContainer = document.getElementById('springs-table-container');
-    if (springsContainer) {
-      if (v.springs.length === 0) {
-        springsContainer.innerHTML = `<div class="p-4 text-xs text-slate-400 bg-slate-50 border border-dashed rounded-lg text-center">Nenhuma mola acoplada.</div>`;
-      } else {
-        let html = `<table class="w-full text-xs text-left border-collapse"><thead><tr class="border-b border-[var(--panel-border)] text-[var(--text-secondary)] font-medium"><th class="py-2">ID</th><th class="py-2">Posição x_k [m]</th><th class="py-2">Rigidez k [N/m]</th><th class="py-2 text-right">Ação</th></tr></thead><tbody>`;
-        v.springs.forEach(s => {
-          html += `<tr class="border-b border-[var(--panel-border)]"><td class="py-2 font-medium">Mola #${s.id}</td><td class="py-2"><input type="number" value="${s.x}" step="0.05" min="0" max="${v.barLength}" class="input-table w-24 py-1" id="spring-x-${s.id}"></td><td class="py-2"><input type="number" value="${s.k}" step="10" min="1" class="input-table w-32 py-1" id="spring-k-${s.id}"></td><td class="py-2 text-right"><button class="text-xs text-[var(--danger)] hover:underline" id="spring-del-${s.id}">Remover</button></td></tr>`;
-        });
-        html += `</tbody></table>`;
-        springsContainer.innerHTML = html;
-        v.springs.forEach(s => {
-          document.getElementById(`spring-x-${s.id}`).onchange = (e) => { s.x = parseFloat(e.target.value); this.solveAndRefresh(); };
-          document.getElementById(`spring-k-${s.id}`).onchange = (e) => { s.k = parseFloat(e.target.value); this.solveAndRefresh(); };
-          document.getElementById(`spring-del-${s.id}`).onclick = () => { v.springs = v.springs.filter(item => item.id !== s.id); this.solveAndRefresh(); };
-        });
+        `;
       }
+      container.innerHTML = `
+        <div class="text-[11px] text-[var(--text-secondary)] font-medium">
+          💡 Clique em qualquer elemento (barra, apoios, molas, articulações) na tela para alterar as suas propriedades.
+        </div>
+        ${addToolbarHtml}
+      `;
+
+      // Bind shortcuts
+      if (this.subType === 'vibracoes') {
+        document.getElementById('ins-add-spring').onclick = () => {
+          const nextId = this.vibracoesModel.springs.length > 0 ? Math.max(...this.vibracoesModel.springs.map(s => s.id)) + 1 : 1;
+          this.vibracoesModel.springs.push({ id: nextId, x: parseFloat((this.vibracoesModel.barLength / 2).toFixed(2)), k: 250 });
+          this.solveAndRefresh();
+        };
+        document.getElementById('ins-add-damper').onclick = () => {
+          const nextId = this.vibracoesModel.dampers.length > 0 ? Math.max(...this.vibracoesModel.dampers.map(d => d.id)) + 1 : 1;
+          this.vibracoesModel.dampers.push({ id: nextId, x: parseFloat((this.vibracoesModel.barLength / 2).toFixed(2)), c: 15 });
+          this.solveAndRefresh();
+        };
+        document.getElementById('ins-add-mass').onclick = () => {
+          const nextId = this.vibracoesModel.masses.length > 0 ? Math.max(...this.vibracoesModel.masses.map(m => m.id)) + 1 : 1;
+          this.vibracoesModel.masses.push({ id: nextId, x: parseFloat((this.vibracoesModel.barLength / 2).toFixed(2)), m: 2.0 });
+          this.solveAndRefresh();
+        };
+      }
+      return;
     }
-  }
 
-  renderQuatroBarrasInputs(container) {
-    const q = this.quatroBarrasModel;
-    container.innerHTML = `
-      <div class="flex flex-col gap-6 text-sm text-[var(--text-primary)]">
-        <h3 class="text-base font-bold border-b border-[var(--panel-border)] pb-2 flex items-center justify-between">
-          <span>Comprimentos das Barras do Mecanismo</span>
-          <span class="text-xs font-normal text-slate-400">Cinemática Plana</span>
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Manivela Motora (r1) [m]</label><input type="number" id="input-r1" value="${q.r1}" step="0.01" min="0.01" class="input-field"></div>
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Biela Acopladora (r2) [m]</label><input type="number" id="input-r2" value="${q.r2}" step="0.01" min="0.01" class="input-field"></div>
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Barra Fixa Apoios (r3) [m]</label><input type="number" id="input-r3" value="${q.r3}" step="0.01" min="0.01" class="input-field"></div>
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Balancim Seguidor (r4) [m]</label><input type="number" id="input-r4" value="${q.r4}" step="0.01" min="0.01" class="input-field"></div>
-        </div>
-        <h3 class="text-base font-bold border-b border-[var(--panel-border)] pb-2 mt-4">Velocidade e Modo de Montagem</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Velocidade Manivela (\\omega_1) [rad/s]</label><input type="number" id="input-w1" value="${q.w1}" step="0.5" class="input-field"></div>
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Configuração de Montagem</label><select id="input-assemblyMode" class="select-input"><option value="open" ${q.assemblyMode === 'open' ? 'selected' : ''}>Configuração Aberta (Open)</option><option value="crossed" ${q.assemblyMode === 'crossed' ? 'selected' : ''}>Configuração Cruzada (Crossed)</option></select></div>
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Ângulo da Manivela Selecionado (\\theta_1) [°]</label><input type="number" id="input-theta1-num" value="${q.theta1}" min="0" max="360" class="input-field"></div>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Ajuste de Ângulo (\\theta_1) no Ciclo</label>
-          <div class="flex items-center gap-4">
-            <input type="range" id="input-theta1-range" min="0" max="360" value="${q.theta1}" class="flex-1 accent-[var(--accent)] cursor-pointer">
-            <span class="w-12 text-xs text-right font-semibold">${q.theta1}°</span>
+    const sel = this.selectedElement;
+    
+    // 1. Spring selected
+    if (sel.type === 'spring') {
+      const spring = this.vibracoesModel.springs.find(s => s.id === sel.id);
+      if (!spring) { this.selectedElement = null; this.updateInspectorContent(); return; }
+      
+      container.innerHTML = `
+        <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div class="text-xs font-bold text-[var(--accent)]">Propriedades da Mola #${spring.id}</div>
+          <div class="flex-1 flex items-center gap-3 w-full">
+            <span class="text-[10px] text-slate-400">Rigidez k:</span>
+            <input type="range" id="ins-k-range" min="10" max="1000" step="10" value="${spring.k}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+            <span class="text-xs font-bold w-16">${spring.k} N/m</span>
           </div>
+          <div class="text-[10px] text-slate-400">Posição x: <span class="font-bold text-slate-700">${spring.x}m</span></div>
+          <button id="ins-delete-btn" class="btn btn-secondary py-1 px-3 text-[11px] text-[var(--danger)] border-[var(--danger)]/30 font-medium">Excluir</button>
         </div>
-      </div>
-    `;
-
-    const bindVal = (id, target, key, isFloat = true) => {
-      const el = document.getElementById(id);
-      if (el) el.onchange = (e) => {
-        target[key] = isFloat ? parseFloat(e.target.value) : e.target.value;
+      `;
+      
+      document.getElementById('ins-k-range').oninput = (e) => {
+        spring.k = parseInt(e.target.value);
+        this.solveSilently();
         this.solveAndRefresh();
       };
-    };
-
-    bindVal('input-r1', this.quatroBarrasModel, 'r1');
-    bindVal('input-r2', this.quatroBarrasModel, 'r2');
-    bindVal('input-r3', this.quatroBarrasModel, 'r3');
-    bindVal('input-r4', this.quatroBarrasModel, 'r4');
-    bindVal('input-w1', this.quatroBarrasModel, 'w1');
-    bindVal('input-assemblyMode', this.quatroBarrasModel, 'assemblyMode', false);
-
-    const theta1Num = document.getElementById('input-theta1-num');
-    const theta1Range = document.getElementById('input-theta1-range');
-
-    if (theta1Num && theta1Range) {
-      theta1Num.oninput = (e) => {
-        let val = parseInt(e.target.value) || 0;
-        this.quatroBarrasModel.theta1 = val;
-        theta1Range.value = val;
-        this.solveAndRefresh();
-      };
-      theta1Range.oninput = (e) => {
-        let val = parseInt(e.target.value);
-        this.quatroBarrasModel.theta1 = val;
-        theta1Num.value = val;
+      document.getElementById('ins-delete-btn').onclick = () => {
+        this.vibracoesModel.springs = this.vibracoesModel.springs.filter(s => s.id !== spring.id);
+        this.selectedElement = null;
         this.solveAndRefresh();
       };
     }
-  }
+    
+    // 2. Damper selected
+    else if (sel.type === 'damper') {
+      const damper = this.vibracoesModel.dampers.find(d => d.id === sel.id);
+      if (!damper) { this.selectedElement = null; this.updateInspectorContent(); return; }
 
-  renderBielaManivelaInputs(container) {
-    const bm = this.bielaManivelaModel;
-    container.innerHTML = `
-      <div class="flex flex-col gap-6 text-sm text-[var(--text-primary)]">
-        <h3 class="text-base font-bold border-b border-[var(--panel-border)] pb-2 flex items-center justify-between">
-          <span>Comprimentos das Barras (Slider-Crank)</span>
-          <span class="text-xs font-normal text-slate-400">Biela-Manivela</span>
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Comprimento Manivela (r1) [m]</label><input type="number" id="input-bm-r1" value="${bm.r1}" step="0.01" min="0.01" class="input-field"></div>
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Comprimento Biela (r2) [m]</label><input type="number" id="input-bm-r2" value="${bm.r2}" step="0.01" min="0.01" class="input-field"></div>
+      container.innerHTML = `
+        <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div class="text-xs font-bold text-[var(--accent)]">Propriedades do Amortecedor #${damper.id}</div>
+          <div class="flex-1 flex items-center gap-3 w-full">
+            <span class="text-[10px] text-slate-400">Amortecimento c:</span>
+            <input type="range" id="ins-c-range" min="1" max="150" step="1" value="${damper.c}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+            <span class="text-xs font-bold w-16">${damper.c} Ns/m</span>
+          </div>
+          <div class="text-[10px] text-slate-400">Posição x: <span class="font-bold text-slate-700">${damper.x}m</span></div>
+          <button id="ins-delete-btn" class="btn btn-secondary py-1 px-3 text-[11px] text-[var(--danger)] border-[var(--danger)]/30 font-medium">Excluir</button>
         </div>
-        <h3 class="text-base font-bold border-b border-[var(--panel-border)] pb-2 mt-4">Velocidade e Posição da Manivela</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Velocidade Angular (\\omega_1) [rad/s]</label><input type="number" id="input-bm-w1" value="${bm.w1}" step="5" class="input-field"></div>
-          <div><label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Ângulo Manivela (\\theta_1) [°]</label><input type="number" id="input-bm-theta1-num" value="${bm.theta1}" min="0" max="360" class="input-field"></div>
-        </div>
-      </div>
-    `;
-
-    const bindVal = (id, target, key, isFloat = true) => {
-      const el = document.getElementById(id);
-      if (el) el.onchange = (e) => {
-        target[key] = isFloat ? parseFloat(e.target.value) : e.target.value;
+      `;
+      
+      document.getElementById('ins-c-range').oninput = (e) => {
+        damper.c = parseFloat(e.target.value);
+        this.solveSilently();
         this.solveAndRefresh();
       };
-    };
+      document.getElementById('ins-delete-btn').onclick = () => {
+        this.vibracoesModel.dampers = this.vibracoesModel.dampers.filter(d => d.id !== damper.id);
+        this.selectedElement = null;
+        this.solveAndRefresh();
+      };
+    }
 
-    bindVal('input-bm-r1', this.bielaManivelaModel, 'r1');
-    bindVal('input-bm-r2', this.bielaManivelaModel, 'r2');
-    bindVal('input-bm-w1', this.bielaManivelaModel, 'w1');
+    // 3. Additional Mass selected
+    else if (sel.type === 'mass') {
+      const mass = this.vibracoesModel.masses.find(m => m.id === sel.id);
+      if (!mass) { this.selectedElement = null; this.updateInspectorContent(); return; }
 
-    const theta1Num = document.getElementById('input-bm-theta1-num');
-    if (theta1Num) {
-      theta1Num.oninput = (e) => {
-        let val = parseInt(e.target.value) || 0;
-        this.bielaManivelaModel.theta1 = val;
+      container.innerHTML = `
+        <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div class="text-xs font-bold text-[var(--accent)]">Massa Adicional #${mass.id}</div>
+          <div class="flex-1 flex items-center gap-3 w-full">
+            <span class="text-[10px] text-slate-400">Massa m:</span>
+            <input type="range" id="ins-m-range" min="0.1" max="15" step="0.1" value="${mass.m}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+            <span class="text-xs font-bold w-16">${mass.m} kg</span>
+          </div>
+          <div class="text-[10px] text-slate-400">Posição x: <span class="font-bold text-slate-700">${mass.x}m</span></div>
+          <button id="ins-delete-btn" class="btn btn-secondary py-1 px-3 text-[11px] text-[var(--danger)] border-[var(--danger)]/30 font-medium">Excluir</button>
+        </div>
+      `;
+      
+      document.getElementById('ins-m-range').oninput = (e) => {
+        mass.m = parseFloat(e.target.value);
+        this.solveSilently();
+        this.solveAndRefresh();
+      };
+      document.getElementById('ins-delete-btn').onclick = () => {
+        this.vibracoesModel.masses = this.vibracoesModel.masses.filter(m => m.id !== mass.id);
+        this.selectedElement = null;
+        this.solveAndRefresh();
+      };
+    }
+
+    // 4. Bar itself selected
+    else if (sel.type === 'bar') {
+      const v = this.vibracoesModel;
+      container.innerHTML = `
+        <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div class="text-xs font-bold text-[var(--text-primary)]">Propriedades da Barra Rígida</div>
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">Comprimento:</span>
+              <input type="range" id="ins-bar-L" min="0.5" max="4.0" step="0.1" value="${v.barLength}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <span class="text-xs font-bold w-12">${v.barLength}m</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">Massa:</span>
+              <input type="range" id="ins-bar-m" min="0.5" max="30" step="0.5" value="${v.barMass}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <span class="text-xs font-bold w-12">${v.barMass}kg</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('ins-bar-L').oninput = (e) => {
+        v.barLength = parseFloat(e.target.value);
+        // keep pivot within bounds
+        if (v.pivotX > v.barLength) v.pivotX = v.barLength;
+        this.solveAndRefresh();
+      };
+      document.getElementById('ins-bar-m').oninput = (e) => {
+        v.barMass = parseFloat(e.target.value);
+        this.solveAndRefresh();
+      };
+    }
+
+    // 5. Force Selected
+    else if (sel.type === 'force') {
+      const f = this.vibracoesModel.force;
+      container.innerHTML = `
+        <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div class="text-xs font-bold text-green-700">Força Harmónica F(t)</div>
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">Força F0:</span>
+              <input type="range" id="ins-force-F0" min="0" max="150" step="5" value="${f.F0}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <span class="text-xs font-bold w-12">${f.F0} N</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">Frequência \u03c9f:</span>
+              <input type="range" id="ins-force-wf" min="0" max="30" step="0.5" value="${f.w}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <span class="text-xs font-bold w-12">${f.w} rad/s</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('ins-force-F0').oninput = (e) => {
+        f.F0 = parseInt(e.target.value);
+        this.solveAndRefresh();
+      };
+      document.getElementById('ins-force-wf').oninput = (e) => {
+        f.w = parseFloat(e.target.value);
+        this.solveAndRefresh();
+      };
+    }
+
+    // 6. Linkage joints (A, B, D, or linkage body) selected
+    else if (sel.type.startsWith('joint_') || sel.type === 'linkage') {
+      const is4Bar = this.subType === 'quatro_barras';
+      const m = is4Bar ? this.quatroBarrasModel : this.bielaManivelaModel;
+      
+      container.innerHTML = `
+        <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div class="text-xs font-bold text-[var(--text-primary)]">Mecanismo (${is4Bar ? '4 Barras' : 'Biela-Manivela'})</div>
+          <div class="flex-1 flex flex-wrap gap-4 w-full items-center justify-between">
+            <div class="flex items-center gap-2 flex-1 min-w-[150px]">
+              <span class="text-[10px] text-slate-400">Veloc. \u03c91:</span>
+              <input type="range" id="ins-link-w1" min="0" max="100" step="0.5" value="${is4Bar ? m.w1 : (m.w1 / 10).toFixed(1)}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <span class="text-xs font-bold w-16">${is4Bar ? m.w1.toFixed(1) : (m.w1/10).toFixed(1)} rad/s</span>
+            </div>
+            ${is4Bar ? `
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-slate-400">Montagem:</span>
+                <select id="ins-link-mode" class="select-input py-0.5 px-2 text-xs w-28">
+                  <option value="open" ${m.assemblyMode === 'open' ? 'selected' : ''}>Aberta</option>
+                  <option value="crossed" ${m.assemblyMode === 'crossed' ? 'selected' : ''}>Cruzada</option>
+                </select>
+              </div>
+            ` : `
+              <div class="text-[10px] text-slate-400 font-medium">💡 Arraste o pino A para alterar o raio r1, ou o pistão B para alterar r2.</div>
+            `}
+          </div>
+        </div>
+      `;
+
+      const w1Range = document.getElementById('ins-link-w1');
+      if (w1Range) w1Range.oninput = (e) => {
+        const val = parseFloat(e.target.value);
+        m.w1 = is4Bar ? val : val * 10; // combustion engine w1 is 10x higher
+        this.solveAndRefresh();
+      };
+      
+      const modeSelect = document.getElementById('ins-link-mode');
+      if (modeSelect) modeSelect.onchange = (e) => {
+        m.assemblyMode = e.target.value;
+        this.solveAndRefresh();
+      };
+    }
+
+    // 7. Sliding Rod selected
+    else if (sel.type.startsWith('slider_') || sel.type === 'rod' || sel.type === 'rod_tip') {
+      const m = this.barraDeslizanteModel;
+      container.innerHTML = `
+        <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div class="text-xs font-bold text-[var(--accent)]">Propriedades da Barra Deslizante</div>
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">Veloc. w:</span>
+              <input type="range" id="ins-bd-w" min="0.1" max="5.0" step="0.1" value="${m.w}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <span class="text-xs font-bold w-12">${m.w.toFixed(1)} rad/s</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">Massa m:</span>
+              <input type="range" id="ins-bd-m" min="0.5" max="15.0" step="0.5" value="${m.m}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <span class="text-xs font-bold w-12">${m.m.toFixed(1)} kg</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('ins-bd-w').oninput = (e) => {
+        m.w = parseFloat(e.target.value);
+        this.solveAndRefresh();
+      };
+      document.getElementById('ins-bd-m').oninput = (e) => {
+        m.m = parseFloat(e.target.value);
+        this.solveAndRefresh();
+      };
+    }
+
+    // 8. Rolling Disk selected
+    else if (sel.type.startsWith('disk') || sel.type === 'center_G' || sel.type === 'point_P' || sel.type === 'vel_arrow') {
+      const m = this.discoRolanteModel;
+      container.innerHTML = `
+        <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div class="text-xs font-bold text-[var(--text-primary)]">Parâmetros da Roda Rolante</div>
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">Acel. aG:</span>
+              <input type="range" id="ins-dr-aG" min="-3" max="3" step="0.2" value="${m.aG}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <span class="text-xs font-bold w-12">${m.aG.toFixed(1)} m/s²</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-slate-400">Massa m:</span>
+              <input type="range" id="ins-dr-m" min="1.0" max="30.0" step="1.0" value="${m.m}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <span class="text-xs font-bold w-12">${m.m.toFixed(0)} kg</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('ins-dr-aG').oninput = (e) => {
+        m.aG = parseFloat(e.target.value);
+        this.solveAndRefresh();
+      };
+      document.getElementById('ins-dr-m').oninput = (e) => {
+        m.m = parseFloat(e.target.value);
         this.solveAndRefresh();
       };
     }
   }
 
-  renderBarraDeslizanteInputs(container) {
-    const bd = this.barraDeslizanteModel;
+  renderResolutionTab() {
+    const container = document.getElementById('panel-resolution');
+    if (!container) return;
+
+    if (!this.solvedResult) {
+      container.innerHTML = `<div class="p-6 text-sm text-slate-400">Resolva o exercício para visualizar a resolução passo a passo.</div>`;
+      return;
+    }
+
     container.innerHTML = `
-      <div class="flex flex-col gap-6 text-sm text-[var(--text-primary)]">
-        <h3 class="text-base font-bold border-b border-[var(--panel-border)] pb-2">
-          <span>Parâmetros da Barra Deslizante</span>
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Comprimento da Barra (L) [m]</label>
-            <input type="number" id="input-bd-L" value="${bd.L}" step="0.1" min="0.5" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Massa da Barra (m) [kg]</label>
-            <input type="number" id="input-bd-m" value="${bd.m}" step="0.5" min="0.1" class="input-field">
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Velocidade Angular (\\omega) [rad/s]</label>
-            <input type="number" id="input-bd-w" value="${bd.w}" step="0.1" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Ângulo da Barra (\\theta) [°]</label>
-            <input type="number" id="input-bd-theta" value="${bd.theta}" min="5" max="85" class="input-field">
-          </div>
+      <div class="space-y-4">
+        <h3 class="text-lg font-bold border-b border-[var(--panel-border)] pb-2">Passo a Passo Detalhado (KaTeX)</h3>
+        <div id="katex-render-area" class="space-y-6 leading-relaxed text-sm text-[var(--text-primary)]">
         </div>
       </div>
     `;
 
-    const bindVal = (id, target, key) => {
-      const el = document.getElementById(id);
-      if (el) el.onchange = (e) => {
-        target[key] = parseFloat(e.target.value);
-        this.solveAndRefresh();
-      };
-    };
-
-    bindVal('input-bd-L', this.barraDeslizanteModel, 'L');
-    bindVal('input-bd-m', this.barraDeslizanteModel, 'm');
-    bindVal('input-bd-w', this.barraDeslizanteModel, 'w');
-    bindVal('input-bd-theta', this.barraDeslizanteModel, 'theta');
-  }
-
-  renderDiscoRolanteInputs(container) {
-    const dr = this.discoRolanteModel;
-    container.innerHTML = `
-      <div class="flex flex-col gap-6 text-sm text-[var(--text-primary)]">
-        <h3 class="text-base font-bold border-b border-[var(--panel-border)] pb-2">
-          <span>Parâmetros do Disco Rolante (Sem Escorregar)</span>
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Raio do Disco (R) [m]</label>
-            <input type="number" id="input-dr-R" value="${dr.R}" step="0.05" min="0.05" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Velocidade do Centro (vG) [m/s]</label>
-            <input type="number" id="input-dr-vG" value="${dr.vG}" step="0.1" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Aceleração do Centro (aG) [m/s²]</label>
-            <input type="number" id="input-dr-aG" value="${dr.aG}" step="0.1" class="input-field">
-          </div>
-        </div>
-        <h3 class="text-base font-bold border-b border-[var(--panel-border)] pb-2 mt-4">Ponto Genérico P</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Raio Posição P (rP) [m]</label>
-            <input type="number" id="input-dr-rP" value="${dr.rP}" step="0.05" min="0" max="${dr.R}" class="input-field">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-[var(--text-secondary)] mb-1">Ângulo Posição P (\\theta_P) [°]</label>
-            <input type="number" id="input-dr-thetaP" value="${dr.thetaP}" min="0" max="360" class="input-field">
-          </div>
-        </div>
-      </div>
-    `;
-
-    const bindVal = (id, target, key) => {
-      const el = document.getElementById(id);
-      if (el) el.onchange = (e) => {
-        target[key] = parseFloat(e.target.value);
-        this.solveAndRefresh();
-      };
-    };
-
-    bindVal('input-dr-R', this.discoRolanteModel, 'R');
-    bindVal('input-dr-vG', this.discoRolanteModel, 'vG');
-    bindVal('input-dr-aG', this.discoRolanteModel, 'aG');
-    bindVal('input-dr-rP', this.discoRolanteModel, 'rP');
-    bindVal('input-dr-thetaP', this.discoRolanteModel, 'thetaP');
+    const renderArea = document.getElementById('katex-render-area');
+    if (renderArea && window.katex) {
+      const rawLines = this.solvedResult.resolutionMarkdown.split('\n');
+      let html = '';
+      
+      rawLines.forEach(line => {
+        if (line.startsWith('### ')) {
+          html += `<h4 class="text-base font-bold text-[var(--text-primary)] mt-6 mb-2 border-b border-dashed border-[var(--panel-border)] pb-1">${line.substring(4)}</h4>`;
+        } else if (line.startsWith('- ')) {
+          html += `<p class="ml-4 list-disc my-1">${line.substring(2)}</p>`;
+        } else if (line.startsWith('$$') && line.endsWith('$$')) {
+          const formula = line.substring(2, line.length - 2);
+          try {
+            const mathHtml = window.katex.renderToString(formula, { displayMode: true, throwOnError: false });
+            html += `<div class="my-4 overflow-x-auto">${mathHtml}</div>`;
+          } catch(e) {
+            html += `<pre class="my-4 p-2 bg-red-50 text-red-500 rounded">${formula}</pre>`;
+          }
+        } else {
+          let inlineParsed = line;
+          const inlineRegex = /\$(.*?)\$/g;
+          let match;
+          while ((match = inlineRegex.exec(line)) !== null) {
+            const formula = match[1];
+            try {
+              const mathHtml = window.katex.renderToString(formula, { displayMode: false, throwOnError: false });
+              inlineParsed = inlineParsed.replace(`$${formula}$`, mathHtml);
+            } catch(e) {}
+          }
+          html += `<p class="my-2">${inlineParsed}</p>`;
+        }
+      });
+      
+      renderArea.innerHTML = html;
+    } else if (renderArea) {
+      renderArea.innerHTML = `<div class="p-4 bg-yellow-50 text-yellow-700 rounded-lg text-xs">KaTeX indisponível.</div>`;
+    }
   }
 
   renderResultsSummary() {
@@ -850,22 +845,25 @@ export class MecAplicadaModule extends SubjectTemplate {
           <div class="text-right font-semibold"><span>${r.I_eq.toFixed(4)} kg·m²</span></div>
           <div><span class="text-[var(--text-secondary)]">Rigidez Eq. (keq):</span></div>
           <div class="text-right font-semibold"><span>${r.k_eq.toFixed(2)} N·m/rad</span></div>
+          <div><span class="text-[var(--text-secondary)]">Amortec. Eq. (ceq):</span></div>
+          <div class="text-right font-semibold"><span>${r.c_eq.toFixed(2)} N·m·s/rad</span></div>
         </div>
         <div class="grid grid-cols-2 gap-y-3 gap-x-2 border-b border-[var(--panel-border)] pb-3 mt-3">
-          <div><span class="text-[var(--text-secondary)]">Freq. Natural (\u03c9n):</span></div>
-          <div class="text-right font-semibold"><span>${r.w_n.toFixed(3)} rad/s</span></div>
+          <div><span class="text-[var(--text-secondary)]">Freq. Natural (fn):</span></div>
+          <div class="text-right font-semibold"><span>${r.f_n.toFixed(3)} Hz</span></div>
           <div><span class="text-[var(--text-secondary)]">Razão Damping (\u03b6):</span></div>
           <div class="text-right font-semibold"><span>${r.zeta.toFixed(4)}</span></div>
         </div>
         <div class="pt-2 text-xs">
           <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-[var(--panel-border)]">
             <span class="font-medium text-[var(--text-secondary)]">Tipo Sistema:</span>
-            <span class="font-bold text-[var(--accent)] uppercase">${r.dampingType}</span>
+            <span class="font-bold text-[var(--accent)] uppercase tracking-wider">${r.dampingType}</span>
           </div>
         </div>
       `;
     } else if (this.subType === 'quatro_barras') {
       const r = this.solvedResult.results;
+      const f = r.forces;
       summaryContainer.innerHTML = `
         <div class="grid grid-cols-2 gap-y-2 gap-x-2 border-b border-[var(--panel-border)] pb-2 text-[11px]">
           <div><span class="text-[var(--text-secondary)]">\u03b82 (Acoplador):</span></div><div class="text-right font-semibold"><span>${r.t2Deg.toFixed(2)}°</span></div>
@@ -876,6 +874,15 @@ export class MecAplicadaModule extends SubjectTemplate {
           <div><span class="text-[var(--text-secondary)]">\u03c94 (Balancim):</span></div><div class="text-right font-semibold"><span>${r.w4.toFixed(3)} rad/s</span></div>
           <div><span class="text-[var(--text-secondary)]">C.I.R. da Biela:</span></div><div class="text-right font-semibold text-[10px]">${r.CIR ? `(${r.CIR.x.toFixed(2)}, ${r.CIR.y.toFixed(2)})m` : 'Infinito'}</div>
         </div>
+        ${f ? `
+          <div class="text-[11px] space-y-1.5 pt-2">
+            <div class="font-bold text-slate-500 uppercase text-[10px] mb-1">Reações de Apoio nos Pinos:</div>
+            <div class="flex justify-between"><span>Hinge O (Ox, Oy):</span><span class="font-semibold">${f.Ox.toFixed(1)}, ${f.Oy.toFixed(1)} N</span></div>
+            <div class="flex justify-between"><span>Joint A (Ax, Ay):</span><span class="font-semibold">${f.Ax.toFixed(1)}, ${f.Ay.toFixed(1)} N</span></div>
+            <div class="flex justify-between"><span>Joint B (Bx, By):</span><span class="font-semibold">${f.Bx.toFixed(1)}, ${f.By.toFixed(1)} N</span></div>
+            <div class="flex justify-between font-bold border-t border-[var(--panel-border)] pt-2 mt-2"><span>Binário Motor (M):</span><span class="text-[var(--accent)] font-mono">${f.M.toFixed(3)} N·m</span></div>
+          </div>
+        ` : ''}
       `;
     } else if (this.subType === 'biela_manivela') {
       const r = this.solvedResult.results;
@@ -889,13 +896,23 @@ export class MecAplicadaModule extends SubjectTemplate {
         <div class="grid grid-cols-2 gap-y-2 gap-x-2 border-b border-[var(--panel-border)] pb-2 text-[11px] mt-2">
           <div><span class="text-[var(--text-secondary)]">C.I.R. da Biela:</span></div><div class="text-right font-semibold text-[10px]">${r.CIR ? `(${r.CIR.x.toFixed(3)}, ${r.CIR.y.toFixed(3)})m` : 'Infinito'}</div>
         </div>
+        ${f ? `
+          <div class="text-[11px] space-y-1.5 pt-2">
+            <div class="font-bold text-slate-500 uppercase text-[10px] mb-1">Reações de Apoio nos Pinos:</div>
+            <div class="flex justify-between"><span>Crank Support O:</span><span class="font-semibold">${f.Ox.toFixed(1)}, ${f.Oy.toFixed(1)} N</span></div>
+            <div class="flex justify-between"><span>Crankpin A (Ax, Ay):</span><span class="font-semibold">${f.Ax.toFixed(1)}, ${f.Ay.toFixed(1)} N</span></div>
+            <div class="flex justify-between"><span>Wristpin B (Bx, By):</span><span class="font-semibold">${f.Bx.toFixed(1)}, ${f.By.toFixed(1)} N</span></div>
+            <div class="flex justify-between font-bold border-t border-[var(--panel-border)] pt-2 mt-2"><span>Força Normal Parede:</span><span class="font-semibold text-[var(--success)]">${f.N.toFixed(1)} N</span></div>
+            <div class="flex justify-between font-bold"><span>Binário Motor (M):</span><span class="text-[var(--accent)] font-mono">${f.M.toFixed(2)} N·m</span></div>
+          </div>
+        ` : ''}
       `;
     } else if (this.subType === 'barra_deslizante') {
       const r = this.solvedResult.results;
       summaryContainer.innerHTML = `
         <div class="grid grid-cols-2 gap-y-2 gap-x-2 border-b border-[var(--panel-border)] pb-2 text-[11px]">
-          <div><span class="text-[var(--text-secondary)]">Posição A (Chão):</span></div><div class="text-right font-semibold"><span>(${r.xA.toFixed(3)}, 0) m</span></div>
-          <div><span class="text-[var(--text-secondary)]">Posição B (Parede):</span></div><div class="text-right font-semibold"><span>(0, ${r.yB.toFixed(3)}) m</span></div>
+          <div><span class="text-[var(--text-secondary)]">A (Chão):</span></div><div class="text-right font-semibold"><span>(${r.xA.toFixed(3)}, 0) m</span></div>
+          <div><span class="text-[var(--text-secondary)]">B (Parede):</span></div><div class="text-right font-semibold"><span>(0, ${r.yB.toFixed(3)}) m</span></div>
           <div><span class="text-[var(--text-secondary)]">C.I.R. da Barra:</span></div><div class="text-right font-semibold text-[var(--accent)]"><span>(${r.CIR.x.toFixed(3)}, ${r.CIR.y.toFixed(3)}) m</span></div>
         </div>
         <div class="grid grid-cols-2 gap-y-2 gap-x-2 border-b border-[var(--panel-border)] pb-2 text-[11px] mt-2">
@@ -912,7 +929,7 @@ export class MecAplicadaModule extends SubjectTemplate {
       const r = this.solvedResult.results;
       summaryContainer.innerHTML = `
         <div class="grid grid-cols-2 gap-y-2 gap-x-2 border-b border-[var(--panel-border)] pb-2 text-[11px]">
-          <div><span class="text(--text-secondary)">Veloc. Angular (\u03c9):</span></div><div class="text-right font-semibold"><span>${r.w.toFixed(2)} rad/s</span></div>
+          <div><span class="text-[var(--text-secondary)]">Veloc. Angular (\u03c9):</span></div><div class="text-right font-semibold"><span>${r.w.toFixed(2)} rad/s</span></div>
           <div><span class="text-[var(--text-secondary)]">Acel. Angular (\u03b1):</span></div><div class="text-right font-semibold"><span>${r.alpha.toFixed(2)} rad/s²</span></div>
           <div><span class="text-[var(--text-secondary)]">Acel. Contacto C:</span></div><div class="text-right font-semibold"><span>(0, ${r.aCy.toFixed(2)}) m/s²</span></div>
         </div>
