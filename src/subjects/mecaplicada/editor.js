@@ -491,6 +491,19 @@ export class MecAplicadaEditor {
     return Math.sqrt(Math.pow(px - (x1 + t * (x2 - x1)), 2) + Math.pow(py - (y1 + t * (y2 - y1)), 2));
   }
 
+  drawGrid() {
+    const ctx = this.ctx;
+    ctx.strokeStyle = '#F0EEE1';
+    ctx.lineWidth = 1;
+    const spacing = 40;
+    for (let x = 0; x < this.canvas.width; x += spacing) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < this.canvas.height; y += spacing) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y); ctx.stroke();
+    }
+  }
+
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawGrid();
