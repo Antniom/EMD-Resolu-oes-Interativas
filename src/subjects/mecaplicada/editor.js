@@ -543,10 +543,11 @@ export class MecAplicadaEditor {
     const py = this.origin.y;
     this.drawSupport(px, py, this.isItemActive('pivot', 'main'));
 
+    // Draw rigid bar and masses inside the rotated coordinate system
+    ctx.save();
     ctx.translate(px, py);
     ctx.rotate(theta);
     
-    // Draw rigid bar using drawRoundRect
     const barLeft = -this.pivotX * this.gridSize;
     const isBarSelected = this.isItemActive('bar', 'main');
     ctx.fillStyle = isBarSelected === 'selected' ? '#D96C53' : (isBarSelected === 'hovered' ? '#d8816c' : '#C05B42');
@@ -566,31 +567,49 @@ export class MecAplicadaEditor {
       ctx.fillStyle = '#ffffff'; ctx.font = '9px Inter'; ctx.fillText(`${m.m}kg`, mx - 10, -13);
     });
 
+    ctx.restore(); // Restore back to global coordinate system!
+
+    // Draw springs in global coordinates (vertically connected from bar to ground line)
     this.springs.forEach(s => {
-      const sx = (s.x - this.pivotX) * this.gridSize;
+      const d = (s.x - this.pivotX) * this.gridSize;
+      // Rotated attachment coordinates on the bottom edge of the bar
+      const x_attach = px + d * Math.cos(theta) - 8 * Math.sin(theta);
+      const y_attach = py + d * Math.sin(theta) + 8 * Math.cos(theta);
+      const y_ground = this.origin.y + 60;
+      const h = y_ground - y_attach;
+      
       const isActive = this.isItemActive('spring', s.id);
-      ctx.save(); ctx.translate(sx, 8); this.drawSpring(0, 0, 48, isActive); ctx.restore();
+      this.drawSpring(x_attach, y_attach, h, isActive);
     });
 
-    this.dampers.forEach(d => {
-      const dx = (d.x - this.pivotX) * this.gridSize;
-      const isActive = this.isItemActive('damper', d.id);
-      ctx.save(); ctx.translate(dx, 8); this.drawDamper(0, 0, 48, isActive); ctx.restore();
+    // Draw dampers in global coordinates
+    this.dampers.forEach(d_item => {
+      const d = (d_item.x - this.pivotX) * this.gridSize;
+      // Rotated attachment coordinates on the bottom edge of the bar
+      const x_attach = px + d * Math.cos(theta) - 8 * Math.sin(theta);
+      const y_attach = py + d * Math.sin(theta) + 8 * Math.cos(theta);
+      const y_ground = this.origin.y + 60;
+      const h = y_ground - y_attach;
+
+      const isActive = this.isItemActive('damper', d_item.id);
+      this.drawDamper(x_attach, y_attach, h, isActive);
     });
 
+    // Draw harmonic force in global coordinates
     if (this.force.F0 > 0) {
-      const fx = (this.force.x - this.pivotX) * this.gridSize;
+      const d = (this.force.x - this.pivotX) * this.gridSize;
+      const x_attach = px + d * Math.cos(theta) + 8 * Math.sin(theta);
+      const y_attach = py + d * Math.sin(theta) - 8 * Math.cos(theta); // Top edge of the bar
+      
       const isActive = this.isItemActive('force', 'main');
       let f_scale = this.isAnimating ? Math.sin(this.force.w * this.animationTime) : 1.0;
       const arrowLength = 50 * f_scale;
       if (Math.abs(arrowLength) > 5) {
-        this.drawArrow(fx, -10, fx, -10 - arrowLength, isActive !== 'none' ? '#BC4749' : '#2D6A4F', isActive !== 'none' ? 4 : 2.5);
+        this.drawArrow(x_attach, y_attach, x_attach, y_attach - arrowLength, isActive !== 'none' ? '#BC4749' : '#2D6A4F', isActive !== 'none' ? 4 : 2.5);
       }
     }
-
-    ctx.restore();
     
-    // Main hinge pivot
+    // Main hinge pivot circle
     ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#191919'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(px, py, 6, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
   }

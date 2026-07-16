@@ -92,8 +92,19 @@ export class MecAplicadaModule extends SubjectTemplate {
         force: { x: 4.0, F0: 50, w: 15, type: 'sin' },
         x0: 0, v0: 1.0
       };
+    } else if (presetId === 'vib_en_2223') {
+      // Exame Normal 2022/23: Sistema Vibratório
+      this.subType = 'vibracoes';
+      this.vibracoesModel = {
+        barLength: 3.0, barMass: 20.0, pivotX: 0.5,
+        springs: [{ id: 1, x: 2.5, k: 600 }, { id: 2, x: 3.0, k: 400 }],
+        dampers: [{ id: 1, x: 2.5, c: 30 }],
+        masses: [],
+        force: { x: 3.0, F0: 100, w: 10, type: 'sin' },
+        x0: 5, v0: 0
+      };
     } else if (presetId === 'vib_en_2122') {
-      // Exame Normal 2021/22: Questão 2 (Oscilador Amortecido)
+      // Exame Normal 2021/22: Amortecedor (Q2)
       this.subType = 'vibracoes';
       this.vibracoesModel = {
         barLength: 2.0, barMass: 3.0, pivotX: 1.0,
@@ -103,8 +114,19 @@ export class MecAplicadaModule extends SubjectTemplate {
         force: { x: 2.0, F0: 4.0, w: 5.0, type: 'sin' },
         x0: 5.15, v0: 0
       };
+    } else if (presetId === 'vib_en_1819') {
+      // Exame Normal 2018/19: Excitação Forçada
+      this.subType = 'vibracoes';
+      this.vibracoesModel = {
+        barLength: 3.0, barMass: 15.0, pivotX: 1.0,
+        springs: [{ id: 1, x: 3.0, k: 900 }],
+        dampers: [{ id: 1, x: 2.0, c: 45 }],
+        masses: [],
+        force: { x: 3.0, F0: 100, w: 8, type: 'sin' },
+        x0: 15, v0: 0.5
+      };
     } else if (presetId === 'vib_freq_1213') {
-      // Frequência 2012/13: Vibração Livre
+      // Frequência 2012/13: Regime Livre
       this.subType = 'vibracoes';
       this.vibracoesModel = {
         barLength: 2.0, barMass: 10.0, pivotX: 0.5,
@@ -114,16 +136,27 @@ export class MecAplicadaModule extends SubjectTemplate {
         force: { x: 2.0, F0: 0, w: 0, type: 'sin' },
         x0: 10, v0: 0
       };
-    } else if (presetId === 'vib_en_1819') {
-      // Exame Normal 2018/19: Regime Transitório e Permanente
+    } else if (presetId === 'vib_en_19') {
+      // Exame Normal 2019: Barra em T (Q1)
       this.subType = 'vibracoes';
       this.vibracoesModel = {
-        barLength: 3.0, barMass: 15.0, pivotX: 1.0,
-        springs: [{ id: 1, x: 3.0, k: 900 }],
-        dampers: [{ id: 1, x: 2.0, c: 45 }],
+        barLength: 3.0, barMass: 12.0, pivotX: 0.0,
+        springs: [{ id: 1, x: 2.0, k: 500 }, { id: 2, x: 3.0, k: 500 }],
+        dampers: [{ id: 1, x: 2.0, c: 40 }],
         masses: [],
-        force: { x: 3.0, F0: 100, w: 8, type: 'sin' },
-        x0: 15, v0: 0.5
+        force: { x: 3.0, F0: 80, w: 12, type: 'sin' },
+        x0: 0, v0: 0.2
+      };
+    } else if (presetId === 'vib_en_13') {
+      // Exame Normal 2013: Barra em T Soldada (Q1)
+      this.subType = 'vibracoes';
+      this.vibracoesModel = {
+        barLength: 2.0, barMass: 8.0, pivotX: 0.8,
+        springs: [{ id: 1, x: 2.0, k: 300 }],
+        dampers: [{ id: 1, x: 1.5, c: 25 }],
+        masses: [],
+        force: { x: 2.0, F0: 0, w: 0, type: 'sin' },
+        x0: 12, v0: 0
       };
     } else if (presetId === 'link_pl2_2122') {
       // PL2 2021/22: Avanço de Grashof (Crossed)
@@ -149,6 +182,14 @@ export class MecAplicadaModule extends SubjectTemplate {
         m1: 0.5, m2: 1.5, m4: 1.0,
         w1: 5.0, assemblyMode: 'open', theta1: 60
       };
+    } else if (presetId === 'link_en_19') {
+      // Exame Normal 2019: Placa Quadrangular (Q3)
+      this.subType = 'quatro_barras';
+      this.quatroBarrasModel = {
+        r1: 0.15, r2: 0.40, r3: 0.40, r4: 0.30,
+        m1: 0.6, m2: 2.0, m4: 1.2,
+        w1: 4.0, assemblyMode: 'open', theta1: 45
+      };
     } else if (presetId === 'bm_en_2122') {
       // Exame Normal 2021/22: Motor Combustão Tambor (500 RPM)
       this.subType = 'biela_manivela';
@@ -170,6 +211,13 @@ export class MecAplicadaModule extends SubjectTemplate {
         r1: 0.04, r2: 0.15, m1: 0.4, m2: 1.0, mp: 0.5,
         w1: 157.08, theta1: 90
       };
+    } else if (presetId === 'bm_en_19') {
+      // Exame Normal 2019: Disco e Motor (1000 RPM)
+      this.subType = 'biela_manivela';
+      this.bielaManivelaModel = {
+        r1: 0.06, r2: 0.22, m1: 0.6, m2: 1.8, mp: 1.0,
+        w1: 104.72, theta1: 60
+      };
     } else if (presetId === 'bd_pe1_2223') {
       // Exame PE1 2022/23: Barra Deslizante (L=2.0m, w=1.5rad/s)
       this.subType = 'barra_deslizante';
@@ -178,6 +226,10 @@ export class MecAplicadaModule extends SubjectTemplate {
       // Exame Recurso 2016: Barra Apoios Deslizantes (L=1.5m, w=2.0rad/s)
       this.subType = 'barra_deslizante';
       this.barraDeslizanteModel = { L: 1.5, theta: 45, w: 2.0, m: 5.0 };
+    } else if (presetId === 'bd_en_13') {
+      // Exame Normal 2013: Cursor E e Haste DE
+      this.subType = 'barra_deslizante';
+      this.barraDeslizanteModel = { L: 1.8, theta: 30, w: 2.5, m: 4.0 };
     } else if (presetId === 'dr_pe1_2223') {
       // Exame PE1 2022/23: Roda Rolante (R=0.4m, vG=2m/s, aG=1m/s²)
       this.subType = 'disco_rolante';
@@ -227,7 +279,7 @@ export class MecAplicadaModule extends SubjectTemplate {
     };
     leftSection.appendChild(subTypeSelect);
 
-    // Preset Selector (Grouped by exam worksheets)
+    // Preset Selector (Grouped by academic tests/exams)
     const presetSelect = document.createElement('select');
     presetSelect.id = 'preset-selector';
     presetSelect.className = 'select-input text-sm py-1.5 px-3 rounded-lg bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]';
@@ -235,23 +287,29 @@ export class MecAplicadaModule extends SubjectTemplate {
       <option value="">-- Carregar Exercício de Exame --</option>
       <optgroup label="Vibrações Mecânicas">
         <option value="vib_pe1_2223">Exame PE1 2022/23: Barra Oscilante (Q5)</option>
+        <option value="vib_en_2223">Exame Normal 2022/23: Sistema Vibratório</option>
         <option value="vib_en_2122">Exame Normal 2021/22: Amortecedor (Q2)</option>
         <option value="vib_en_1819">Exame Normal 2018/19: Excitação Forçada</option>
         <option value="vib_freq_1213">Frequência 2012/13: Regime Livre</option>
+        <option value="vib_en_19">Exame Normal 2019: Barra em T (Q1)</option>
+        <option value="vib_en_13">Exame Normal 2013: Barra em T Soldada (Q1)</option>
       </optgroup>
       <optgroup label="Mecanismo de 4 Barras">
         <option value="link_pl2_2223">PL2 2022/23: Avanço Intermitente (Open)</option>
         <option value="link_pl2_2122">PL2 2021/22: Avanço de Grashof (Crossed)</option>
         <option value="link_en_1920">Exame Normal 2019/20: Articulado</option>
+        <option value="link_en_19">Exame Normal 2019: Placa Quadrangular (Q3)</option>
       </optgroup>
       <optgroup label="Mecanismo Biela-Manivela">
         <option value="bm_en_2122">Exame Normal 2021/22: Motor (500 RPM)</option>
         <option value="bm_slide_daniela">PL2 2023/24: Motor-Tambor (5 RPM)</option>
         <option value="bm_er_13">Exame Recurso 2013: Compressor (1500 RPM)</option>
+        <option value="bm_en_19">Exame Normal 2019: Disco e Motor (1000 RPM)</option>
       </optgroup>
       <optgroup label="Barra Deslizante (C.I.R.)">
         <option value="bd_pe1_2223">Exame PE1 2022/23: Barra L=2.0m, w=1.5rad/s</option>
         <option value="bd_er_16">Exame Recurso 2016: Barra L=1.5m, w=2rad/s</option>
+        <option value="bd_en_13">Exame Normal 2013: Cursor E e Haste DE</option>
       </optgroup>
       <optgroup label="Disco Rolante (C.I.R.)">
         <option value="dr_pe1_2223">Exame PE1 2022/23: Roda R=0.4m, vG=2m/s</option>
@@ -416,8 +474,8 @@ export class MecAplicadaModule extends SubjectTemplate {
     const buttons = this.container.querySelectorAll('.tab-btn');
     buttons.forEach((btn, idx) => {
       btn.classList.remove('active');
-      if (idx === 0 && tabId === 'editor') btn.classList.add('active');
-      if (idx === 1 && tabId === 'resolution') btn.classList.add('active');
+      if (idx === 0 && tabId === 'editor' && btn.innerText === 'Simulação Interativa') btn.classList.add('active');
+      if (idx === 1 && tabId === 'resolution' && btn.innerText === 'Resolução Detalhada') btn.classList.add('active');
     });
 
     const panelEditor = document.getElementById('panel-editor');
@@ -825,16 +883,37 @@ export class MecAplicadaModule extends SubjectTemplate {
 
     const renderArea = document.getElementById('katex-render-area');
     if (renderArea && window.katex) {
+      // Helper function to replace math $...$ and bold **...**
+      const parseMathAndMarkdown = (text) => {
+        let result = text;
+        // 1. Math formulas $...$
+        result = result.replace(/\$(.*?)\$/g, (match, formula) => {
+          try {
+            return window.katex.renderToString(formula, { displayMode: false, throwOnError: false });
+          } catch(e) {
+            return match;
+          }
+        });
+        // 2. Bold text **...**
+        result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        return result;
+      };
+
       const rawLines = this.solvedResult.resolutionMarkdown.split('\n');
       let html = '';
       
       rawLines.forEach(line => {
-        if (line.startsWith('### ')) {
-          html += `<h4 class="text-base font-bold text-[var(--text-primary)] mt-6 mb-2 border-b border-dashed border-[var(--panel-border)] pb-1">${line.substring(4)}</h4>`;
-        } else if (line.startsWith('- ')) {
-          html += `<p class="ml-4 list-disc my-1">${line.substring(2)}</p>`;
-        } else if (line.startsWith('$$') && line.endsWith('$$')) {
-          const formula = line.substring(2, line.length - 2);
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        
+        if (trimmed.startsWith('### ')) {
+          const content = parseMathAndMarkdown(trimmed.substring(4));
+          html += `<h4 class="text-base font-bold text-[var(--text-primary)] mt-6 mb-2 border-b border-dashed border-[var(--panel-border)] pb-1">${content}</h4>`;
+        } else if (trimmed.startsWith('- ')) {
+          const content = parseMathAndMarkdown(trimmed.substring(2));
+          html += `<div class="flex items-start gap-2 ml-4 my-1.5"><span class="text-[var(--accent)]">•</span><div class="flex-1">${content}</div></div>`;
+        } else if (trimmed.startsWith('$$') && trimmed.endsWith('$$')) {
+          const formula = trimmed.substring(2, trimmed.length - 2);
           try {
             const mathHtml = window.katex.renderToString(formula, { displayMode: true, throwOnError: false });
             html += `<div class="my-4 overflow-x-auto">${mathHtml}</div>`;
@@ -842,17 +921,8 @@ export class MecAplicadaModule extends SubjectTemplate {
             html += `<pre class="my-4 p-2 bg-red-50 text-red-500 rounded">${formula}</pre>`;
           }
         } else {
-          let inlineParsed = line;
-          const inlineRegex = /\$(.*?)\$/g;
-          let match;
-          while ((match = inlineRegex.exec(line)) !== null) {
-            const formula = match[1];
-            try {
-              const mathHtml = window.katex.renderToString(formula, { displayMode: false, throwOnError: false });
-              inlineParsed = inlineParsed.replace(`$${formula}$`, mathHtml);
-            } catch(e) {}
-          }
-          html += `<p class="my-2">${inlineParsed}</p>`;
+          const content = parseMathAndMarkdown(trimmed);
+          html += `<p class="my-2">${content}</p>`;
         }
       });
       
