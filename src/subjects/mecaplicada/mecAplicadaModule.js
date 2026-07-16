@@ -81,77 +81,111 @@ export class MecAplicadaModule extends SubjectTemplate {
   }
 
   loadPreset(presetId) {
-    if (presetId === 'vib_tp1_2223') {
+    if (presetId === 'vib_pe1_2223') {
+      // Exame PE1 2022/23: Questão 5
       this.subType = 'vibracoes';
       this.vibracoesModel = {
-        barLength: 2.0, barMass: 6.0, pivotX: 0.5,
-        springs: [{ id: 1, x: 2.0, k: 250 }],
-        dampers: [{ id: 1, x: 0.0, c: 15 }],
+        barLength: 4.0, barMass: 30.0, pivotX: 0.0,
+        springs: [{ id: 1, x: 3.0, k: 800 }, { id: 2, x: 4.0, k: 360 }],
+        dampers: [{ id: 1, x: 3.0, c: 20 }],
         masses: [],
-        force: { x: 2.0, F0: 10, w: 5, type: 'sin' },
+        force: { x: 4.0, F0: 50, w: 15, type: 'sin' },
+        x0: 0, v0: 1.0
+      };
+    } else if (presetId === 'vib_en_2122') {
+      // Exame Normal 2021/22: Questão 2 (Oscilador Amortecido)
+      this.subType = 'vibracoes';
+      this.vibracoesModel = {
+        barLength: 2.0, barMass: 3.0, pivotX: 1.0,
+        springs: [{ id: 1, x: 2.0, k: 20 }],
+        dampers: [{ id: 1, x: 2.0, c: 7 }],
+        masses: [],
+        force: { x: 2.0, F0: 4.0, w: 5.0, type: 'sin' },
+        x0: 5.15, v0: 0
+      };
+    } else if (presetId === 'vib_freq_1213') {
+      // Frequência 2012/13: Vibração Livre
+      this.subType = 'vibracoes';
+      this.vibracoesModel = {
+        barLength: 2.0, barMass: 10.0, pivotX: 0.5,
+        springs: [{ id: 1, x: 2.0, k: 400 }],
+        dampers: [{ id: 1, x: 1.5, c: 30 }],
+        masses: [],
+        force: { x: 2.0, F0: 0, w: 0, type: 'sin' },
         x0: 10, v0: 0
       };
-    } else if (presetId === 'vib_tp1_1415') {
+    } else if (presetId === 'vib_en_1819') {
+      // Exame Normal 2018/19: Regime Transitório e Permanente
       this.subType = 'vibracoes';
       this.vibracoesModel = {
-        barLength: 1.5, barMass: 4.0, pivotX: 0.4,
-        springs: [{ id: 1, x: 1.5, k: 500 }],
-        dampers: [{ id: 1, x: 0.8, c: 20 }],
-        masses: [{ id: 1, x: 1.5, m: 3.0 }],
-        force: { x: 1.5, F0: 25, w: 3.5, type: 'sin' },
+        barLength: 3.0, barMass: 15.0, pivotX: 1.0,
+        springs: [{ id: 1, x: 3.0, k: 900 }],
+        dampers: [{ id: 1, x: 2.0, c: 45 }],
+        masses: [],
+        force: { x: 3.0, F0: 100, w: 8, type: 'sin' },
         x0: 15, v0: 0.5
       };
-    } else if (presetId === 'vib_undamped') {
-      this.subType = 'vibracoes';
-      this.vibracoesModel = {
-        barLength: 2.0, barMass: 5.0, pivotX: 0.0,
-        springs: [{ id: 1, x: 2.0, k: 300 }],
-        dampers: [], masses: [],
-        force: { x: 2.0, F0: 0, w: 0, type: 'sin' },
-        x0: 8, v0: 0
-      };
-    } else if (presetId === 'vib_overdamped') {
-      this.subType = 'vibracoes';
-      this.vibracoesModel = {
-        barLength: 2.0, barMass: 5.0, pivotX: 0.5,
-        springs: [{ id: 1, x: 2.0, k: 100 }],
-        dampers: [{ id: 1, x: 2.0, c: 120 }],
-        masses: [],
-        force: { x: 2.0, F0: 0, w: 0, type: 'sin' },
-        x0: 20, v0: 0
-      };
-    } else if (presetId === 'link_tp2_2122') {
+    } else if (presetId === 'link_pl2_2122') {
+      // PL2 2021/22: Avanço de Grashof (Crossed)
       this.subType = 'quatro_barras';
       this.quatroBarrasModel = {
         r1: 0.10, r2: 0.30, r3: 0.30, r4: 0.20,
         m1: 0.5, m2: 1.5, m4: 1.0,
         w1: 1.5, assemblyMode: 'crossed', theta1: 45
       };
-    } else if (presetId === 'link_grashof') {
+    } else if (presetId === 'link_pl2_2223') {
+      // PL2 2022/23: Mecanismo de Avanço Intermitente (Open)
       this.subType = 'quatro_barras';
       this.quatroBarrasModel = {
         r1: 0.08, r2: 0.25, r3: 0.30, r4: 0.20,
         m1: 0.4, m2: 1.2, m4: 0.8,
         w1: 3.0, assemblyMode: 'open', theta1: 30
       };
-    } else if (presetId === 'bm_combustion') {
+    } else if (presetId === 'link_en_1920') {
+      // Exame 2019/20: Mecanismo Articulado
+      this.subType = 'quatro_barras';
+      this.quatroBarrasModel = {
+        r1: 0.12, r2: 0.35, r3: 0.40, r4: 0.25,
+        m1: 0.5, m2: 1.5, m4: 1.0,
+        w1: 5.0, assemblyMode: 'open', theta1: 60
+      };
+    } else if (presetId === 'bm_en_2122') {
+      // Exame Normal 2021/22: Motor Combustão Tambor (500 RPM)
       this.subType = 'biela_manivela';
       this.bielaManivelaModel = {
         r1: 0.05, r2: 0.18, m1: 0.5, m2: 1.5, mp: 0.82,
-        w1: 314.16, theta1: 90
+        w1: 52.36, theta1: 45
       };
-    } else if (presetId === 'bm_tambor') {
+    } else if (presetId === 'bm_slide_daniela') {
+      // PL2 2023/24: Motor Biela-Manivela-Tambor (5 RPM)
       this.subType = 'biela_manivela';
       this.bielaManivelaModel = {
         r1: 0.05, r2: 0.18, m1: 0.5, m2: 1.5, mp: 50.0,
-        w1: 0.5236, theta1: 45
+        w1: 0.5236, theta1: 60
       };
-    } else if (presetId === 'bd_exame') {
+    } else if (presetId === 'bm_er_13') {
+      // Exame Recurso 2013: Compressor Monocilíndrico (1500 RPM)
+      this.subType = 'biela_manivela';
+      this.bielaManivelaModel = {
+        r1: 0.04, r2: 0.15, m1: 0.4, m2: 1.0, mp: 0.5,
+        w1: 157.08, theta1: 90
+      };
+    } else if (presetId === 'bd_pe1_2223') {
+      // Exame PE1 2022/23: Barra Deslizante (L=2.0m, w=1.5rad/s)
       this.subType = 'barra_deslizante';
       this.barraDeslizanteModel = { L: 2.0, theta: 60, w: 1.5, m: 3.0 };
-    } else if (presetId === 'dr_exame') {
+    } else if (presetId === 'bd_er_16') {
+      // Exame Recurso 2016: Barra Apoios Deslizantes (L=1.5m, w=2.0rad/s)
+      this.subType = 'barra_deslizante';
+      this.barraDeslizanteModel = { L: 1.5, theta: 45, w: 2.0, m: 5.0 };
+    } else if (presetId === 'dr_pe1_2223') {
+      // Exame PE1 2022/23: Roda Rolante (R=0.4m, vG=2m/s, aG=1m/s²)
       this.subType = 'disco_rolante';
       this.discoRolanteModel = { R: 0.4, vG: 2.0, aG: 1.0, rP: 0.4, thetaP: 45, m: 10.0 };
+    } else if (presetId === 'dr_freq_1112') {
+      // Frequência 2011/12: Cilindro em Rolamento Puro (R=0.3m, vG=1.5m/s)
+      this.subType = 'disco_rolante';
+      this.discoRolanteModel = { R: 0.3, vG: 1.5, aG: 0.5, rP: 0.2, thetaP: 90, m: 8.0 };
     }
     
     const subTypeSelect = document.getElementById('subtype-selector');
@@ -193,22 +227,36 @@ export class MecAplicadaModule extends SubjectTemplate {
     };
     leftSection.appendChild(subTypeSelect);
 
-    // Preset Selector
+    // Preset Selector (Grouped by exam worksheets)
     const presetSelect = document.createElement('select');
     presetSelect.id = 'preset-selector';
     presetSelect.className = 'select-input text-sm py-1.5 px-3 rounded-lg bg-[var(--bg-card)] border border-[var(--panel-border)] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]';
     presetSelect.innerHTML = `
-      <option value="">-- Carregar Exercício Resolvido --</option>
-      <option value="vib_tp1_2223">PL 1: Vibrações Barra (2022/2023)</option>
-      <option value="vib_tp1_1415">PL 1: Vibrações Complexas (2014/2015)</option>
-      <option value="vib_undamped">Vibração Livre Não Amortecida (c=0)</option>
-      <option value="vib_overdamped">Vibração Livre Sobreamortecida (c > cc)</option>
-      <option value="link_tp2_2122">PL 2: Mecanismo de 4 Barras (2021/2022)</option>
-      <option value="link_grashof">Mecanismo Manivela-Balancim (Grashof)</option>
-      <option value="bm_combustion">Exame: Motor Combustão (3000 RPM)</option>
-      <option value="bm_tambor">Ficha: Biela-Manivela-Tambor (5 RPM)</option>
-      <option value="bd_exame">Exame PE1: Barra Deslizante (L=2m, w=1.5rad/s)</option>
-      <option value="dr_exame">Exame PE1: Roda Rolante (R=0.4m, vG=2m/s)</option>
+      <option value="">-- Carregar Exercício de Exame --</option>
+      <optgroup label="Vibrações Mecânicas">
+        <option value="vib_pe1_2223">Exame PE1 2022/23: Barra Oscilante (Q5)</option>
+        <option value="vib_en_2122">Exame Normal 2021/22: Amortecedor (Q2)</option>
+        <option value="vib_en_1819">Exame Normal 2018/19: Excitação Forçada</option>
+        <option value="vib_freq_1213">Frequência 2012/13: Regime Livre</option>
+      </optgroup>
+      <optgroup label="Mecanismo de 4 Barras">
+        <option value="link_pl2_2223">PL2 2022/23: Avanço Intermitente (Open)</option>
+        <option value="link_pl2_2122">PL2 2021/22: Avanço de Grashof (Crossed)</option>
+        <option value="link_en_1920">Exame Normal 2019/20: Articulado</option>
+      </optgroup>
+      <optgroup label="Mecanismo Biela-Manivela">
+        <option value="bm_en_2122">Exame Normal 2021/22: Motor (500 RPM)</option>
+        <option value="bm_slide_daniela">PL2 2023/24: Motor-Tambor (5 RPM)</option>
+        <option value="bm_er_13">Exame Recurso 2013: Compressor (1500 RPM)</option>
+      </optgroup>
+      <optgroup label="Barra Deslizante (C.I.R.)">
+        <option value="bd_pe1_2223">Exame PE1 2022/23: Barra L=2.0m, w=1.5rad/s</option>
+        <option value="bd_er_16">Exame Recurso 2016: Barra L=1.5m, w=2rad/s</option>
+      </optgroup>
+      <optgroup label="Disco Rolante (C.I.R.)">
+        <option value="dr_pe1_2223">Exame PE1 2022/23: Roda R=0.4m, vG=2m/s</option>
+        <option value="dr_freq_1112">Frequência 2011/12: Roda R=0.3m, vG=1.5m/s</option>
+      </optgroup>
     `;
     presetSelect.onchange = (e) => {
       const presetId = e.target.value;
@@ -269,7 +317,7 @@ export class MecAplicadaModule extends SubjectTemplate {
     const mainWorkspaceArea = document.createElement('div');
     mainWorkspaceArea.className = 'flex-1 flex flex-col min-h-[500px] relative';
 
-    // Panel 1: Canvas Editor (now features absolute floating overlay control card)
+    // Panel 1: Canvas Editor
     const editorPanel = document.createElement('div');
     editorPanel.className = `w-full flex-col glass-panel rounded-2xl overflow-hidden h-[500px] bg-white relative ${this.activeTab === 'editor' ? 'flex' : 'hidden'}`;
     editorPanel.id = 'panel-editor';
@@ -334,10 +382,9 @@ export class MecAplicadaModule extends SubjectTemplate {
     layout.appendChild(splitWorkspace);
     this.container.appendChild(layout);
 
-    // Initialize Editor with dual drag-and-drop & selection callbacks
+    // Initialize Editor
     this.editor = new MecAplicadaEditor(canvas, 
       (updatedCoords) => {
-        // Drag update callback
         if (this.subType === 'vibracoes') {
           Object.assign(this.vibracoesModel, updatedCoords);
         } else if (this.subType === 'quatro_barras') {
@@ -353,7 +400,6 @@ export class MecAplicadaModule extends SubjectTemplate {
         this.updateInspectorContent();
       },
       (selectedItem) => {
-        // Click selection callback
         this.selectedElement = selectedItem;
         this.updateInspectorContent();
       }
@@ -465,13 +511,11 @@ export class MecAplicadaModule extends SubjectTemplate {
     if (playBtn) playBtn.innerText = 'Animar';
   }
 
-  // Visual Overlay Property Inspector content renderer
   updateInspectorContent() {
     const container = document.getElementById('editor-inspector');
     if (!container) return;
 
     if (!this.selectedElement) {
-      // DEFAULT: Instructions & Add Shortcuts
       let addToolbarHtml = '';
       if (this.subType === 'vibracoes') {
         addToolbarHtml = `
@@ -489,7 +533,6 @@ export class MecAplicadaModule extends SubjectTemplate {
         ${addToolbarHtml}
       `;
 
-      // Bind shortcuts
       if (this.subType === 'vibracoes') {
         document.getElementById('ins-add-spring').onclick = () => {
           const nextId = this.vibracoesModel.springs.length > 0 ? Math.max(...this.vibracoesModel.springs.map(s => s.id)) + 1 : 1;
@@ -512,7 +555,6 @@ export class MecAplicadaModule extends SubjectTemplate {
 
     const sel = this.selectedElement;
     
-    // 1. Spring selected
     if (sel.type === 'spring') {
       const spring = this.vibracoesModel.springs.find(s => s.id === sel.id);
       if (!spring) { this.selectedElement = null; this.updateInspectorContent(); return; }
@@ -542,7 +584,6 @@ export class MecAplicadaModule extends SubjectTemplate {
       };
     }
     
-    // 2. Damper selected
     else if (sel.type === 'damper') {
       const damper = this.vibracoesModel.dampers.find(d => d.id === sel.id);
       if (!damper) { this.selectedElement = null; this.updateInspectorContent(); return; }
@@ -572,7 +613,6 @@ export class MecAplicadaModule extends SubjectTemplate {
       };
     }
 
-    // 3. Additional Mass selected
     else if (sel.type === 'mass') {
       const mass = this.vibracoesModel.masses.find(m => m.id === sel.id);
       if (!mass) { this.selectedElement = null; this.updateInspectorContent(); return; }
@@ -602,7 +642,6 @@ export class MecAplicadaModule extends SubjectTemplate {
       };
     }
 
-    // 4. Bar itself selected
     else if (sel.type === 'bar') {
       const v = this.vibracoesModel;
       container.innerHTML = `
@@ -616,7 +655,7 @@ export class MecAplicadaModule extends SubjectTemplate {
             </div>
             <div class="flex items-center gap-2">
               <span class="text-[10px] text-slate-400">Massa:</span>
-              <input type="range" id="ins-bar-m" min="0.5" max="30" step="0.5" value="${v.barMass}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
+              <input type="range" id="ins-bar-m" min="0.5" max="50" step="0.5" value="${v.barMass}" class="flex-1 accent-[var(--accent)] cursor-pointer h-1.5">
               <span class="text-xs font-bold w-12">${v.barMass}kg</span>
             </div>
           </div>
@@ -625,7 +664,6 @@ export class MecAplicadaModule extends SubjectTemplate {
 
       document.getElementById('ins-bar-L').oninput = (e) => {
         v.barLength = parseFloat(e.target.value);
-        // keep pivot within bounds
         if (v.pivotX > v.barLength) v.pivotX = v.barLength;
         this.solveAndRefresh();
       };
@@ -635,7 +673,6 @@ export class MecAplicadaModule extends SubjectTemplate {
       };
     }
 
-    // 5. Force Selected
     else if (sel.type === 'force') {
       const f = this.vibracoesModel.force;
       container.innerHTML = `
@@ -666,7 +703,6 @@ export class MecAplicadaModule extends SubjectTemplate {
       };
     }
 
-    // 6. Linkage joints (A, B, D, or linkage body) selected
     else if (sel.type.startsWith('joint_') || sel.type === 'linkage') {
       const is4Bar = this.subType === 'quatro_barras';
       const m = is4Bar ? this.quatroBarrasModel : this.bielaManivelaModel;
@@ -698,7 +734,7 @@ export class MecAplicadaModule extends SubjectTemplate {
       const w1Range = document.getElementById('ins-link-w1');
       if (w1Range) w1Range.oninput = (e) => {
         const val = parseFloat(e.target.value);
-        m.w1 = is4Bar ? val : val * 10; // combustion engine w1 is 10x higher
+        m.w1 = is4Bar ? val : val * 10;
         this.solveAndRefresh();
       };
       
@@ -709,7 +745,6 @@ export class MecAplicadaModule extends SubjectTemplate {
       };
     }
 
-    // 7. Sliding Rod selected
     else if (sel.type.startsWith('slider_') || sel.type === 'rod' || sel.type === 'rod_tip') {
       const m = this.barraDeslizanteModel;
       container.innerHTML = `
@@ -740,7 +775,6 @@ export class MecAplicadaModule extends SubjectTemplate {
       };
     }
 
-    // 8. Rolling Disk selected
     else if (sel.type.startsWith('disk') || sel.type === 'center_G' || sel.type === 'point_P' || sel.type === 'vel_arrow') {
       const m = this.discoRolanteModel;
       container.innerHTML = `
