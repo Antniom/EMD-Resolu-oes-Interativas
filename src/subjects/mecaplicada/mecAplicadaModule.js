@@ -238,6 +238,43 @@ export class MecAplicadaModule extends SubjectTemplate {
       // Frequência 2011/12: Cilindro em Rolamento Puro (R=0.3m, vG=1.5m/s)
       this.subType = 'disco_rolante';
       this.discoRolanteModel = { R: 0.3, vG: 1.5, aG: 0.5, rP: 0.2, thetaP: 90, m: 8.0 };
+    } else if (presetId === 'vib_freq_13') {
+      // Frequência 1 2012/13: Sistema em L (Q1)
+      this.subType = 'vibracoes';
+      this.vibracoesModel = {
+        barLength: 2.0, barMass: 0.005, pivotX: 1.0,
+        springs: [{ id: 1, x: 2.0, k: 0.1 }],
+        dampers: [{ id: 1, x: 2.0, c: 0.05 }],
+        masses: [{ id: 1, x: 2.0, m: 0.005 }],
+        force: { x: 2.0, F0: 0.1, w: 5.0, type: 'sin' },
+        x0: 57.3, v0: 0
+      };
+    } else if (presetId === 'vib_en_11') {
+      // Exame Normal 2010/11: Massa-Mola-Amortecedor em L (Q1)
+      this.subType = 'vibracoes';
+      this.vibracoesModel = {
+        barLength: 2.0, barMass: 0.0216, pivotX: 1.0,
+        springs: [{ id: 1, x: 2.0, k: 17.37 }],
+        dampers: [{ id: 1, x: 2.0, c: 0.288 }],
+        masses: [{ id: 1, x: 2.0, m: 0.0216 }],
+        force: { x: 2.0, F0: 0, w: 0, type: 'sin' },
+        x0: 0, v0: -52.5
+      };
+    } else if (presetId === 'bm_en_11') {
+      // Exame Normal 2010/11: Manivela 10 rad/s (Q4)
+      this.subType = 'biela_manivela';
+      this.bielaManivelaModel = {
+        r1: 0.04, r2: 0.20, e: 0.12, m1: 0.075, m2: 0.375, mp: 1.0,
+        w1: -10.0, theta1: 180
+      };
+    } else if (presetId === 'link_freq_13') {
+      // Frequência 2 2012/13: Triângulo Equilátero (Q3)
+      this.subType = 'quatro_barras';
+      this.quatroBarrasModel = {
+        r1: 1.0, r2: 1.0, r3: 1.0, r4: 1.0,
+        m1: 1.0, m2: 1.0, m4: 1.0,
+        w1: 2.0, assemblyMode: 'open', theta1: 60
+      };
     }
     
     const subTypeSelect = document.getElementById('subtype-selector');
@@ -289,12 +326,15 @@ export class MecAplicadaModule extends SubjectTemplate {
         <option value="vib_pe1_2223">Exame PE1 2022/23: Barra Oscilante (Q5)</option>
         <option value="vib_en_2223">Exame Normal 2022/23: Sistema Vibratório</option>
         <option value="vib_en_2122">Exame Normal 2021/22: Amortecedor (Q2)</option>
+        <option value="vib_en_11">Exame Normal 2010/11: Massa-Mola-Amortecedor em L (Q1)</option>
+        <option value="vib_freq_13">Frequência 1 2012/13: Sistema em L (Q1)</option>
         <option value="vib_en_1819">Exame Normal 2018/19: Excitação Forçada</option>
         <option value="vib_freq_1213">Frequência 2012/13: Regime Livre</option>
         <option value="vib_en_19">Exame Normal 2019: Barra em T (Q1)</option>
         <option value="vib_en_13">Exame Normal 2013: Barra em T Soldada (Q1)</option>
       </optgroup>
       <optgroup label="Mecanismo de 4 Barras">
+        <option value="link_freq_13">Frequência 2 2012/13: Triângulo Equilátero (Q3)</option>
         <option value="link_pl2_2223">PL2 2022/23: Avanço Intermitente (Open)</option>
         <option value="link_pl2_2122">PL2 2021/22: Avanço de Grashof (Crossed)</option>
         <option value="link_en_1920">Exame Normal 2019/20: Articulado</option>
@@ -302,6 +342,7 @@ export class MecAplicadaModule extends SubjectTemplate {
       </optgroup>
       <optgroup label="Mecanismo Biela-Manivela">
         <option value="bm_en_2122">Exame Normal 2021/22: Motor (500 RPM)</option>
+        <option value="bm_en_11">Exame Normal 2010/11: Manivela 10 rad/s (Q4)</option>
         <option value="bm_slide_daniela">PL2 2023/24: Motor-Tambor (5 RPM)</option>
         <option value="bm_er_13">Exame Recurso 2013: Compressor (1500 RPM)</option>
         <option value="bm_en_19">Exame Normal 2019: Disco e Motor (1000 RPM)</option>
