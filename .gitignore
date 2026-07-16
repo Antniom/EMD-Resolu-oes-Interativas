@@ -10,3 +10,6 @@ dist/
 # System files
 .DS_Store
 Thumbs.db
+
+# Raw course materials
+/MecAplicada/

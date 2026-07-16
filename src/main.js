@@ -1,11 +1,13 @@
 // Main application entry point and subject router
 
 import { EacModule } from './subjects/eac/eacModule.js';
+import { MecAplicadaModule } from './subjects/mecaplicada/mecAplicadaModule.js';
 
 // Registered Subjects List
 // To add a new subject, import its module, add its entry here, and it will automatically appear in the dashboard!
 const SUBJECTS = [
-  { id: 'eac', name: 'Engenharia Assistida por Computador (EAC)', class: EacModule }
+  { id: 'eac', name: 'Engenharia Assistida por Computador (EAC)', class: EacModule },
+  { id: 'mecaplicada', name: 'Mecânica Aplicada', class: MecAplicadaModule }
 ];
 
 let activeSubjectInstance = null;

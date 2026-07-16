@@ -297,3 +297,36 @@ canvas {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-tertiary);
 }
+
+/* --- Mecânica Aplicada Form Overrides --- */
+.input-field, .select-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    background: #FAFAFA;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.input-table {
+    padding: 4px 8px;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    text-align: center;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-sm);
+    background: #FAFAFA;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.input-field:focus, .select-input:focus, .input-table:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    background: #ffffff;
+}
