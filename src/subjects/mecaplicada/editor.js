@@ -1,6 +1,19 @@
 // Interactive 2D HTML5 Canvas Editor for Mecânica Aplicada (Applied Mechanics)
 // Supports visual element selection, dragging to resize parameters, and joint configuration
 
+// Helper function to draw rounded rectangles on canvas safely for older browser compatibility
+function drawRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
 export class MecAplicadaEditor {
   constructor(canvasElement, onChange, onSelect) {
     this.canvas = canvasElement;
@@ -426,7 +439,7 @@ export class MecAplicadaEditor {
       // Hit rod body
       const dist = this.pointToSegmentDistance(mx, my, xA, yA, xB, yB);
       if (dist < 12) {
-        return { type: 'rod', L: this.L, theta: this.theta, w: this.w, m: this.barraDeslizanteModel?.m || 3.0 };
+        return { type: 'rod', L: this.L, theta: this.theta, w: this.w };
       }
     } else if (this.type === 'disco_rolante') {
       const center_cx = this.origin.x + 150;
@@ -463,7 +476,7 @@ export class MecAplicadaEditor {
 
       // Disk body
       if (dist_center < this.R * this.gridSize) {
-        return { type: 'disk', R: this.R, vG: this.vG, aG: this.aG, m: this.discoRolanteModel?.m || 10.0 };
+        return { type: 'disk', R: this.R, vG: this.vG, aG: this.aG };
       }
     }
 
@@ -520,13 +533,13 @@ export class MecAplicadaEditor {
     ctx.translate(px, py);
     ctx.rotate(theta);
     
-    // Draw rigid bar
+    // Draw rigid bar using drawRoundRect
     const barLeft = -this.pivotX * this.gridSize;
     const isBarSelected = this.isItemActive('bar', 'main');
     ctx.fillStyle = isBarSelected === 'selected' ? '#D96C53' : (isBarSelected === 'hovered' ? '#d8816c' : '#C05B42');
     ctx.strokeStyle = isBarSelected !== 'none' ? '#191919' : '#565656';
     ctx.lineWidth = isBarSelected !== 'none' ? 5 : 4;
-    ctx.beginPath(); ctx.roundRect(barLeft, -8, this.barLength * this.gridSize, 16, 4); ctx.fill(); ctx.stroke();
+    drawRoundRect(ctx, barLeft, -8, this.barLength * this.gridSize, 16, 4); ctx.fill(); ctx.stroke();
     
     const G_x = (this.barLength / 2 - this.pivotX) * this.gridSize;
     ctx.fillStyle = '#191919'; ctx.beginPath(); ctx.arc(G_x, 0, 5, 0, 2*Math.PI); ctx.fill();
@@ -703,9 +716,9 @@ export class MecAplicadaEditor {
     ctx.lineWidth = 10;
     ctx.beginPath(); ctx.moveTo(xA, yA); ctx.lineTo(xB, yB); ctx.stroke(); // Biela
 
-    // Piston
+    // Piston - safe roundRect drawing
     ctx.fillStyle = '#FAFAFA'; ctx.strokeStyle = '#191919'; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.roundRect(xB - 24, yB - 14, 48, 28, 4); ctx.fill(); ctx.stroke();
+    drawRoundRect(ctx, xB - 24, yB - 14, 48, 28, 4); ctx.fill(); ctx.stroke();
 
     // Draggable Pin A
     const activeStateA = this.isItemActive('joint_A', 'none');
@@ -780,16 +793,16 @@ export class MecAplicadaEditor {
     ctx.strokeStyle = '#191919'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(xG, yG, 7, 0, 2*Math.PI); ctx.fill(); ctx.stroke();
 
-    // Draggable Sliders A and B
+    // Draggable Sliders A and B - safe roundRect drawing
     const activeStateA = this.isItemActive('slider_A', 'none');
     ctx.fillStyle = activeStateA === 'selected' ? '#D96C53' : (activeStateA === 'hovered' ? '#d8816c' : '#ffffff');
     ctx.strokeStyle = '#191919'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.roundRect(xA - 12, yA - 6, 24, 12, 2); ctx.fill(); ctx.stroke();
+    drawRoundRect(ctx, xA - 12, yA - 6, 24, 12, 2); ctx.fill(); ctx.stroke();
 
     const activeStateB = this.isItemActive('slider_B', 'none');
     ctx.fillStyle = activeStateB === 'selected' ? '#D96C53' : (activeStateB === 'hovered' ? '#d8816c' : '#ffffff');
     ctx.strokeStyle = '#191919'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.roundRect(xB - 6, yB - 12, 12, 24, 2); ctx.fill(); ctx.stroke();
+    drawRoundRect(ctx, xB - 6, yB - 12, 12, 24, 2); ctx.fill(); ctx.stroke();
   }
 
   drawDiscoRolante() {
@@ -867,5 +880,68 @@ export class MecAplicadaEditor {
     if (this.selectedItem && this.selectedItem.type === type && (id === 'none' || this.selectedItem.id === id)) return 'selected';
     if (this.hoveredItem && this.hoveredItem.type === type && (id === 'none' || this.hoveredItem.id === id)) return 'hovered';
     return 'none';
+  }
+
+  drawSpring(x, y, h, activeState) {
+    const ctx = this.ctx;
+    ctx.save(); ctx.translate(x, y);
+    ctx.strokeStyle = activeState === 'selected' ? '#D96C53' : (activeState === 'hovered' ? '#c45b42' : '#191919');
+    ctx.lineWidth = activeState !== 'none' ? 3 : 2;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 8);
+    const coils = 6;
+    const coilH = (h - 16) / coils;
+    const w = 12;
+    for (let i = 0; i < coils; i++) {
+      const cy = 8 + i * coilH;
+      ctx.lineTo(w, cy + coilH * 0.25); ctx.lineTo(-w, cy + coilH * 0.75);
+    }
+    ctx.lineTo(0, h - 8); ctx.lineTo(0, h); ctx.stroke();
+    ctx.fillStyle = '#8f8f8f'; ctx.fillRect(-10, h, 20, 3);
+    ctx.restore();
+  }
+
+  drawDamper(x, y, h, activeState) {
+    const ctx = this.ctx;
+    ctx.save(); ctx.translate(x, y);
+    ctx.strokeStyle = activeState === 'selected' ? '#D96C53' : (activeState === 'hovered' ? '#c45b42' : '#191919');
+    ctx.lineWidth = activeState !== 'none' ? 3 : 2;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 16); ctx.moveTo(-10, 16); ctx.lineTo(10, 16); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-12, 12); ctx.lineTo(-12, 40); ctx.lineTo(12, 40); ctx.lineTo(12, 12);
+    ctx.moveTo(0, 40); ctx.lineTo(0, h); ctx.stroke();
+    ctx.fillStyle = '#8f8f8f'; ctx.fillRect(-10, h, 20, 3);
+    ctx.restore();
+  }
+
+  drawSupport(x, y, activeState) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.fillStyle = activeState === 'selected' ? 'rgba(217,108,83,0.2)' : (activeState === 'hovered' ? 'rgba(196,91,66,0.1)' : '#EBEBE2');
+    ctx.strokeStyle = activeState !== 'none' ? '#D96C53' : '#191919';
+    ctx.lineWidth = activeState !== 'none' ? 3 : 2;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 16, y + 25); ctx.lineTo(x + 16, y + 25); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 22, y + 26); ctx.lineTo(x + 22, y + 26); ctx.stroke();
+    ctx.restore();
+  }
+
+  drawArrow(fromX, fromY, toX, toY, color, width) {
+    const ctx = this.ctx;
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width;
+    ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(toX, toY); ctx.stroke();
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    const headLen = 8;
+    ctx.beginPath(); ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI/6), toY - headLen * Math.sin(angle - Math.PI/6));
+    ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI/6), toY - headLen * Math.sin(angle + Math.PI/6));
+    ctx.closePath(); ctx.fill();
+  }
+
+  drawLockedState(O_x, O_y, xD, yD, xA, yA) {
+    const ctx = this.ctx;
+    this.drawSupport(O_x, O_y, 'none');
+    this.drawSupport(xD, yD, 'none');
+    ctx.strokeStyle = '#BC4749'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(O_x, O_y); ctx.lineTo(xD, yD); ctx.stroke();
+    ctx.fillStyle = '#BC4749'; ctx.font = 'bold 14px Inter';
+    ctx.fillText('CRITÉRIO DE MONTAGEM VIOLADO (TRAVADO)', this.canvas.width / 2 - 150, 40);
   }
 }
